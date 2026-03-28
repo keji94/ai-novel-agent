@@ -15,7 +15,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 OC_HOME="$HOME/.openclaw"
-OC_CFG="$OC_HOME/openclaw.json"
 
 # 打印函数
 print_info() {
@@ -74,18 +73,9 @@ fi
 # ── 检查是否已存在工作目录 ──────────────────────────────────────
 WORKSPACE_BASE="$OC_HOME/workspace-ai-novel-agent"
 if [ -d "$WORKSPACE_BASE" ]; then
-    print_warning "检测到已存在工作目录: $WORKSPACE_BASE"
-    read -p "是否备份现有配置并继续? (y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_info "安装已取消"
-        exit 0
-    fi
-
-    # 备份现有配置
-    BACKUP_DIR="$OC_HOME/workspace-ai-novel-agent_backup_$(date +%Y%m%d_%H%M%S)"
-    print_info "备份现有配置到: $BACKUP_DIR"
-    cp -r "$WORKSPACE_BASE" "$BACKUP_DIR"
+    print_info "工作空间已存在: $WORKSPACE_BASE（将覆盖配置文件，保留 Git 历史）"
+else
+    BACKUP_DIR="" # 首次安装，无需备份
 fi
 
 # ── Step 1: 复制 Agent 工作空间 ─────────────────────────────────
@@ -207,33 +197,7 @@ Co-Authored-By: install.sh <auto>"
 
 init_git_repo
 
-# ── Step 2: 安装 openclaw.json ──────────────────────────────────
-install_openclaw_config() {
-  print_info "安装 openclaw.json..."
-
-  local SRC_CFG="$SCRIPT_DIR/openclaw.json"
-
-  if [ ! -f "$SRC_CFG" ]; then
-    print_error "未找到 openclaw.json: $SRC_CFG"
-    return 1
-  fi
-
-  mkdir -p "$OC_HOME"
-
-  # 如果已存在配置，备份
-  if [ -f "$OC_CFG" ]; then
-    cp "$OC_CFG" "$OC_CFG.bak.novel-agent-$(date +%Y%m%d-%H%M%S)"
-    print_info "已备份配置: $OC_CFG.bak.*"
-  fi
-
-  # 复制源配置
-  cp "$SRC_CFG" "$OC_CFG"
-  print_success "openclaw.json 安装完成"
-}
-
-install_openclaw_config
-
-# ── Step 3: 注册所有 Agents + Content Package ───────────────────
+# ── Step 2: 注册所有 Agents + 绑定群组 ───────────────────────────
 register_agents() {
   print_info "注册网文写作多Agent系统..."
 
@@ -242,7 +206,11 @@ import json, pathlib, sys, os
 from datetime import datetime
 
 cfg_path = pathlib.Path.home() / '.openclaw' / 'openclaw.json'
-cfg = json.loads(cfg_path.read_text(encoding='utf-8'))
+cfg_path.parent.mkdir(parents=True, exist_ok=True)
+if cfg_path.exists():
+    cfg = json.loads(cfg_path.read_text(encoding='utf-8'))
+else:
+    cfg = {}
 
 # 定义所有 Agent（11个）
 AGENTS = [
@@ -303,14 +271,17 @@ if 'ai-novel-agent' in agents_cfg:
 
 # 注册 Content Package: workspace-ai-novel-content
 packages = cfg.setdefault('packages', {})
-packages['workspace-ai-novel-content'] = {
-    'name': 'AI网文写作智能体内容包',
-    'version': '1.0.0',
-    'description': '多Agent网文写作系统 - 11个Agent协作',
-    'source': 'workspace-ai-novel-agent',
-    'installedAt': datetime.now().isoformat()
-}
-print(f'  + registered: workspace-ai-novel-content')
+if 'workspace-ai-novel-content' not in packages:
+    packages['workspace-ai-novel-content'] = {
+        'name': 'AI网文写作智能体内容包',
+        'version': '1.0.0',
+        'description': '多Agent网文写作系统 - 11个Agent协作',
+        'source': 'workspace-ai-novel-agent',
+        'installedAt': datetime.now().isoformat()
+    }
+    print(f'  + registered: workspace-ai-novel-content')
+else:
+    print(f'  ~ exists: workspace-ai-novel-content (skipped)')
 
 # 绑定飞书群组（如果提供了 chat_id）
 chat_id = os.environ.get('FEISHU_CHAT_ID', '')
@@ -409,10 +380,11 @@ install_local_skills() {
     for skill_dir in "$SKILLS_SRC"/*; do
       if [ -d "$skill_dir" ]; then
         skill_name=$(basename "$skill_dir")
-        # 如果目标目录已存在，先备份
+        # 如果目标目录已存在，跳过（保留用户修改）
         if [ -d "$SKILLS_DEST/$skill_name" ]; then
-          print_info "  备份已存在的: $skill_name"
-          mv "$SKILLS_DEST/$skill_name" "$SKILLS_DEST/${skill_name}_backup_$(date +%Y%m%d_%H%M%S)"
+          print_info "  已存在: $skill_name (跳过)"
+          skill_count=$((skill_count + 1))
+          continue
         fi
         cp -r "$skill_dir" "$SKILLS_DEST/"
         print_info "  安装: $skill_name"
@@ -548,7 +520,6 @@ echo "   - workspace-learner          (写作技巧学习)"
 echo ""
 echo "📁 Agent状态目录: $HOME/.openclaw/agents/"
 echo "📁 Skills目录: $OC_HOME/skills/"
-echo "📁 配置文件: $OC_CFG"
 echo ""
 print_success "开始使用你的AI网文写作智能体吧!"
 echo ""
