@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Program Files/Git/bin/**)",
+      "Read(//c/Program Files \\(x86\\)/Git/bin/**)",
+      "Bash(cmd.exe /c \"where git\")",
+      "Read(//c/Users/WINDOWS/AppData/Local/Programs/**)",
+      "Read(//c/Users/WINDOWS/scoop/apps/git/current/bin/**)",
+      "Read(//c/Users/WINDOWS/AppData/Local/**)"
+    ]
+  }
+}

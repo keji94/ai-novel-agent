@@ -8,46 +8,49 @@
 workspace-ai-novel-agent/
 ├── openclaw.json                           # 主配置文件
 ├── install.sh                              # 安装脚本（注册到 ~/.openclaw）
+├── claude.sh                               # Claude CLI 启动脚本
+├── config/
+│   └── novel-config.json                   # 小说通用配置
 ├── skills/                                 # 技能集成
 │   └── ima-skill/                          # IMA云端同步技能
-├── workspace-ai-novel-agent/               # 所有Agent工作空间
-│   ├── workspace-main/                     # Supervisor (总协调器)
-│   ├── workspace-planner/                  # 策划/大纲师
-│   ├── workspace-writer/                   # 写作/作者
-│   ├── workspace-editor/                   # 编辑/审核
-│   ├── workspace-reviser/                  # 修订者
-│   ├── workspace-chapter-analyzer/         # 章节分析器
-│   ├── workspace-style-analyzer/           # 文风分析器
-│   ├── workspace-detector/                 # AI痕迹检测器
-│   ├── workspace-analyst/                  # 网文分析
-│   ├── workspace-operator/                 # 运营/分析
-│   └── workspace-learner/                  # 写作技巧学习
+├── workspace-main/                         # Supervisor (总协调器)
+├── workspace-planner/                      # 策划/大纲师
+├── workspace-writer/                       # 写作/作者
+├── workspace-editor/                       # 编辑/审核
+├── workspace-reviser/                      # 修订者
+├── workspace-chapter-analyzer/             # 章节分析器
+├── workspace-style-analyzer/               # 文风分析器
+├── workspace-detector/                     # AI痕迹检测器
+├── workspace-analyst/                      # 网文分析
+├── workspace-operator/                     # 运营/分析
+├── workspace-learner/                      # 写作技巧学习
 ├── novels/                                 # 小说内容存储
 │   └── {小说名}/
+│       ├── project.json                    # 项目元信息
+│       ├── brainstorm/                     # 灵感记录
 │       ├── settings/                       # 世界观设定
 │       ├── characters/                     # 角色设定
 │       ├── outline/                        # 大纲
 │       ├── chapters/                       # 章节
-│       ├── style/                          # 风格指南
 │       └── context/                        # 上下文追踪
-│           ├── tracking/                   # 真相文件 (7个)
+│           ├── indexes/                    # 索引 (角色/物品/地点)
+│           ├── tracking/                   # 真相文件
 │           │   ├── .snapshots/             # 版本快照
-│           │   ├── current_state.md        # 世界状态
+│           │   ├── world_state.json        # 世界状态
 │           │   ├── particle_ledger.md      # 资源账本
 │           │   ├── foreshadowing.json      # 伏笔追踪
 │           │   ├── subplot_board.md        # 支线进度
 │           │   ├── emotional_arcs.md       # 情感弧线
 │           │   └── character_states.json   # 角色矩阵
 │           └── summaries/                  # 摘要
-│               └── chapter_summaries.md    # 章节摘要
-├── scripts/                                # 工具脚本
+│               ├── chapter_summaries.md
+│               └── volume_summaries.md
+├── scripts/
 │   ├── export.sh                           # 导出 (TXT/MD/EPUB)
 │   └── ima-sync.sh                         # IMA云端同步
-├── knowledge/                              # 知识库
-│   ├── techniques/                         # 写作技巧
-│   └── analysis/                           # 作品分析
+├── knowledge/
+│   └── techniques/                         # 写作技巧（按平台分类）
 ├── references/                             # 参考作品库
-├── docs/                                   # 项目文档
 └── logs/                                   # 日志目录
 ```
 
@@ -107,8 +110,6 @@ workspace-ai-novel-agent/
 
 ## 工作流程
 
-### 典型创作流程
-
 ```
 用户需求 → Supervisor解析
     │
@@ -134,49 +135,9 @@ workspace-ai-novel-agent/
     └─→ 学习技巧 → Learner(提供写作指导)
 ```
 
-### 使用示例
-
-1. **灵感探索**
-   ```
-   用户: "我想写小说，但不知道写什么"
-   Supervisor: 识别为灵感探索 → 调用Planner引导式头脑风暴
-   ```
-
-2. **创作新小说**
-   ```
-   用户: "帮我写一本修仙小说，金手指是签到系统"
-   Supervisor: 识别为创作需求 → Planner(大纲) → Writer(撰写) → Editor(审计)
-   ```
-
-3. **导入续写**
-   ```
-   用户: "导入这个小说帮我续写"
-   Supervisor: 调用ChapterAnalyzer逆向工程 → Writer基于真相文件续写
-   ```
-
-4. **文风仿写**
-   ```
-   用户: "分析这个作者的文风，帮我模仿"
-   Supervisor: StyleAnalyzer(分析) → 应用到项目 → Writer按风格指南写作
-   ```
-
-5. **AI痕迹检测**
-   ```
-   用户: "检测这章的AI痕迹"
-   Supervisor: Detector(检测) → 如需修订 → Reviser(去AI味)
-   ```
-
-6. **章节修改**
-   ```
-   用户: "修改第3章的打斗场景"
-   Supervisor: Writer(修改) → Editor(审核) → 真相文件重算
-   ```
-
 ## 核心机制
 
 ### 两阶段写作架构
-
-Writer 采用两阶段写作，将创意表达和精确状态追踪分离：
 
 | 阶段 | 温度 | 输出 | 目的 |
 |------|------|------|------|
@@ -185,25 +146,25 @@ Writer 采用两阶段写作，将创意表达和精确状态追踪分离：
 
 写后自动运行 11 条确定性规则验证器，error 级别违规自动触发 spot-fix。
 
-### 7个真相文件
+### 真相文件（7个）
 
 长篇写作（500万字级）的核心上下文管理机制：
 
 | 文件 | 用途 |
 |------|------|
-| `current_state.md` | 世界状态：地点、势力、已知信息 |
+| `world_state.json` | 世界状态：地点、势力、已知信息 |
 | `particle_ledger.md` | 资源账本：物品、金钱、修炼资源 |
 | `foreshadowing.json` | 伏笔追踪：未闭合伏笔 |
-| `chapter_summaries.md` | 章节摘要 |
+| `character_states.json` | 角色矩阵：关系、信息边界 |
 | `subplot_board.md` | 支线进度板 |
 | `emotional_arcs.md` | 情感弧线 |
-| `character_states.json` | 角色矩阵：关系、信息边界 |
+| `chapter_summaries.md` | 章节摘要 |
 
-真相文件支持版本快照（`.snapshots/`），Phase 2 结算前自动创建，保留最近 5 个版本。
+支持版本快照（`.snapshots/`），Phase 2 结算前自动创建，保留最近 5 个版本。
 
 ### 33维度审计系统
 
-Editor 的全面审计覆盖 7 大类 33 个维度：
+Editor 审计覆盖 7 大类 33 个维度：
 
 | 类别 | 维度 | 关键检查项 |
 |------|------|-----------|
@@ -219,7 +180,7 @@ Editor 的全面审计覆盖 7 大类 33 个维度：
 
 ### AI痕迹检测
 
-Detector 的三层检测体系：
+Detector 三层检测体系：
 
 | 层级 | 方法 | 成本 | 内容 |
 |------|------|------|------|
@@ -232,13 +193,10 @@ AI 痕迹得分 0-100，低于 70 建议修订，低于 60 建议重写。
 ### IMA云端同步
 
 通过 IMA 技能实现双写双读机制：
-
 - **写入(双写)**: 本地文件 → IMA云端笔记本
 - **读取(回退)**: 尝试本地 → 不存在则从 IMA 读取 → 回写本地
 
-## 配置说明
-
-### 模型配置
+## 模型配置
 
 在 `openclaw.json` 中为不同 Agent 配置模型和温度：
 
@@ -257,72 +215,22 @@ AI 痕迹得分 0-100，低于 70 建议修订，低于 60 建议重写。
 | Operator | 0.7 | 8192 | 运营分析 |
 | Learner | 0.7 | 16384 | 学习内容输出 |
 
-### 渠道配置
-
-支持以下渠道：
-
-- **CLI**: 命令行交互（默认启用）
-- **飞书**: 通过飞书机器人交互（需配置 appId 和 appSecret）
-
-```json
-{
-  "channels": {
-    "feishu": {
-      "enabled": true,
-      "appId": "${FEISHU_APP_ID}",
-      "appSecret": "${FEISHU_APP_SECRET}"
-    }
-  }
-}
-```
-
-## 快速开始
-
-1. **克隆项目**
-   ```bash
-   git clone <repo-url>
-   cd workspace-ai-novel-agent
-   ```
-
-2. **运行安装脚本**
-   ```bash
-   ./install.sh
-   ```
-
-3. **配置环境变量**（如需飞书渠道或IMA同步）
-   ```bash
-   export FEISHU_APP_ID=your_app_id
-   export FEISHU_APP_SECRET=your_app_secret
-   export IMA_OPENAPI_CLIENTID=your_client_id
-   export IMA_OPENAPI_APIKEY=your_api_key
-   ```
-
-4. **启动系统**
-   ```bash
-   openclaw start
-   ```
-
-5. **开始创作**
-   ```
-   > 帮我写一本修仙小说
-   ```
-
-## Agent定义文件说明
+## Agent定义文件
 
 每个 Agent 有四个核心定义文件：
 
-- **SOUL.md**: Agent 人格定义，描述角色身份、性格特质、专业能力
-- **AGENTS.md**: 工作流程定义，描述任务类型、协作模式、接口规范
-- **TOOLS.md**: 工具手册，描述可用的工具和使用方法
-- **MEMORY.md**: 记忆存储，保存长期知识和上下文信息
+- **SOUL.md**: Agent 人格定义（角色身份、性格特质、专业能力）
+- **AGENTS.md**: 工作流程定义（任务类型、协作模式、接口规范）
+- **TOOLS.md**: 工具手册（可用工具和使用方法）
+- **MEMORY.md**: 记忆存储（长期知识和上下文信息，跨会话持久化）
 
-Supervisor 还有额外的 **HEARTBEAT.md** 定义项目状态恢复机制。
+Supervisor 额外有 **HEARTBEAT.md** 定义项目状态恢复机制。
 
 ## 扩展开发
 
 ### 添加新 Agent
 
-1. 在 `workspace-ai-novel-agent/` 下创建 `workspace-{agent名}` 目录
+1. 在项目根目录创建 `workspace-{agent名}/` 目录
 2. 编写 SOUL.md、AGENTS.md、TOOLS.md、MEMORY.md
 3. 在 `openclaw.json` 的 `agents` 中添加配置
 4. 更新 Supervisor 的 AGENTS.md 添加路由规则
@@ -330,10 +238,7 @@ Supervisor 还有额外的 **HEARTBEAT.md** 定义项目状态恢复机制。
 
 ### 知识库扩展
 
-在 `knowledge/` 目录下存放学习到的写作技巧：
-- 用户分享范文链接后，系统会自动提取技巧入库
-- 技巧按平台分类存储（知乎/公众号/抖音等）
-- 写作时根据场景自动匹配加载相关技巧
+在 `knowledge/techniques/` 下按平台分类存放写作技巧，写作时根据场景自动匹配加载。
 
 ## 注意事项
 
@@ -342,7 +247,6 @@ Supervisor 还有额外的 **HEARTBEAT.md** 定义项目状态恢复机制。
 - 子 Agent 完成后返回 `sync_hint`，由主 Agent 统一执行 IMA 云端同步
 - 真相文件在 Phase 2 结算前自动创建版本快照
 - 配置文件使用 JSON 格式，支持环境变量替换
-- 记忆文件 (MEMORY.md) 会跨会话持久化
 
 ## License
 
