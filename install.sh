@@ -91,7 +91,7 @@ fi
 # ── Step 1: 复制 Agent 工作空间 ─────────────────────────────────
 print_info "复制多Agent工作空间..."
 
-SOURCE_WORKSPACE="$SCRIPT_DIR/workspace-ai-novel-agent"
+SOURCE_WORKSPACE="$SCRIPT_DIR"
 
 if [ ! -d "$SOURCE_WORKSPACE" ]; then
     print_error "未找到源工作空间目录: $SOURCE_WORKSPACE"
@@ -152,6 +152,60 @@ find "$WORKSPACE_BASE" -type f -name "*.md" -exec chmod 644 {} \;
 find "$WORKSPACE_BASE" -type f -name "*.json" -exec chmod 644 {} \;
 
 print_success "Agent工作空间复制完成"
+
+# ── Step 1.5: 初始化 Git 仓库 ──────────────────────────────────
+init_git_repo() {
+  print_info "初始化 Git 仓库..."
+
+  # 检查是否已是 git 仓库
+  if [ -d "$WORKSPACE_BASE/.git" ]; then
+    print_info "  已是 Git 仓库，跳过初始化"
+    return 0
+  fi
+
+  cd "$WORKSPACE_BASE"
+
+  # 初始化
+  git init -q
+
+  # 创建 .gitignore
+  cat > .gitignore << 'GITEOF'
+# Agent 运行时记忆（每日日记，不纳入版本控制）
+*/memory/
+
+# 编辑器/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+GITEOF
+
+  # 从源仓库继承 remote（如果存在）
+  local src_remote
+  src_remote="$(git -C "$SCRIPT_DIR" remote get-url origin 2>/dev/null)" || true
+  if [ -n "$src_remote" ]; then
+    git remote add origin "$src_remote"
+    print_info "  remote origin: $src_remote"
+  fi
+
+  # 初始提交
+  git add -A
+  git commit -q -m "init: AI网文写作智能体工作空间安装
+
+Co-Authored-By: install.sh <auto>"
+
+  print_success "Git 仓库初始化完成"
+  if [ -n "$src_remote" ]; then
+    print_info "  可通过 'cd $WORKSPACE_BASE && git push -u origin main' 推送到远程"
+  fi
+}
+
+init_git_repo
 
 # ── Step 2: 安装 openclaw.json ──────────────────────────────────
 install_openclaw_config() {
