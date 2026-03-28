@@ -202,7 +202,7 @@ register_agents() {
   print_info "注册网文写作多Agent系统..."
 
   python3 << 'PYEOF'
-import json, pathlib, sys, os
+import json, pathlib, os
 from datetime import datetime
 
 cfg_path = pathlib.Path.home() / '.openclaw' / 'openclaw.json'
@@ -238,36 +238,39 @@ AGENTS = [
      "workspace": "workspace-ai-novel-agent/workspace-learner"},
 ]
 
+# 注册到 agents.list
 agents_cfg = cfg.setdefault('agents', {})
+agents_list = agents_cfg.get('list', [])
+existing_ids = {a['id'] for a in agents_list}
 
-# 扁平对象格式
+workspace_base = str(pathlib.Path.home() / '.openclaw')
+
 added = 0
 for ag in AGENTS:
     ag_id = ag['id']
-    if ag_id not in agents_cfg:
-        entry = {
-            'name': ag['name'],
-            'workspace': ag['workspace'],
-            'description': ag['name'],
-            'enabled': True,
-        }
+    workspace = f'{workspace_base}/{ag["workspace"]}'
+    if ag_id not in existing_ids:
+        entry = {'id': ag_id, 'workspace': workspace}
+        # Supervisor (is_entry) 配置 subagents.allowAgents
         if ag.get('is_entry'):
-            entry['is_entry'] = True
-        agents_cfg[ag_id] = entry
+            sub_ids = [a['id'] for a in AGENTS if not a.get('is_entry')]
+            entry['subagents'] = {'allowAgents': sub_ids}
+        agents_list.append(entry)
         added += 1
-        print(f'  + added: {ag_id} ({ag["name"]})')
+        print(f'  + registered agent: {ag_id} ({ag["name"]})')
     else:
-        print(f'  ~ exists: {ag_id} (skipped)')
+        # 已存在则更新 workspace 路径
+        for a in agents_list:
+            if a.get('id') == ag_id:
+                a['workspace'] = workspace
+                # 确保 allowAgents 完整
+                if ag.get('is_entry'):
+                    sub_ids = [x['id'] for x in AGENTS if not x.get('is_entry')]
+                    a.setdefault('subagents', {}).setdefault('allowAgents', sub_ids)
+                break
+        print(f'  ~ agent {ag_id} exists (workspace updated)')
 
-# 更新 ai-novel-agent 的 allowAgents 列表
-if 'ai-novel-agent' in agents_cfg:
-    subagents = agents_cfg['ai-novel-agent'].setdefault('subagents', {})
-    allow = subagents.setdefault('allowAgents', [])
-    expected_agents = [ag['id'] for ag in AGENTS if not ag.get('is_entry')]
-    for agent_id in expected_agents:
-        if agent_id not in allow:
-            allow.append(agent_id)
-            print(f'  + allowAgent: {agent_id}')
+agents_cfg['list'] = agents_list
 
 # 注册 Content Package: workspace-ai-novel-content
 packages = cfg.setdefault('packages', {})
@@ -304,6 +307,8 @@ if chat_id:
         print(f'  + bound: feishu group {chat_id} -> ai-novel-agent')
     else:
         print(f'  ~ binding exists: {chat_id} (skipped)')
+else:
+    print('  ~ no FEISHU_CHAT_ID set, skipping group binding')
 
 cfg_path.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding='utf-8')
 print(f'Done: {added} agents added')
