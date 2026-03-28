@@ -1,0 +1,13 @@
+# Agent 运行时记忆（每日日记，不纳入版本控制）
+*/memory/
+
+# 编辑器/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
