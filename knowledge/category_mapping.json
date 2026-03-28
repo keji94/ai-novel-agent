@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "description": "场景到技巧的映射配置，用于自动加载相关技巧",
+  "mappings": [
+    {
+      "id": "M001",
+      "scene": "写作知乎短篇",
+      "triggers": {
+        "content_type": "short_story",
+        "platform": "zhihu",
+        "keywords": ["知乎短篇", "知乎盐选", "知乎故事"]
+      },
+      "technique_ids": [],
+      "auto_load": true
+    },
+    {
+      "id": "M002",
+      "scene": "写作公众号文章",
+      "triggers": {
+        "content_type": "article",
+        "platform": "wechat",
+        "keywords": ["公众号", "微信文章"]
+      },
+      "technique_ids": [],
+      "auto_load": true
+    },
+    {
+      "id": "M003",
+      "scene": "创作抖音脚本",
+      "triggers": {
+        "content_type": "video_script",
+        "platform": "douyin",
+        "keywords": ["抖音", "短视频脚本", "抖音文案"]
+      },
+      "technique_ids": [],
+      "auto_load": true
+    },
+    {
+      "id": "M004",
+      "scene": "网文开篇",
+      "triggers": {
+        "writing_stage": "开篇",
+        "keywords": ["开篇", "第一章", "黄金三章"]
+      },
+      "technique_ids": [],
+      "auto_load": true
+    },
+    {
+      "id": "M005",
+      "scene": "战斗场景",
+      "triggers": {
+        "scene_type": "战斗",
+        "keywords": ["战斗", "打斗", "对决"]
+      },
+      "technique_ids": [],
+      "auto_load": true
+    }
+  ],
+  "metadata": {
+    "last_updated": "2024-01-15",
+    "total_mappings": 5
+  }
+}

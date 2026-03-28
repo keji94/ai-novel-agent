@@ -1,0 +1,53 @@
+{
+  "foreshadowing_list": [
+    {
+      "id": "F001",
+      "description": "签到系统的来源",
+      "type": "main_plot",
+      "planted_chapter": 2,
+      "planted_context": "林风觉醒签到系统，系统来源神秘",
+      "hints": [],
+      "status": "pending",
+      "importance": "high",
+      "planned_reveal_chapter": 200,
+      "resolved_chapter": null,
+      "resolved_context": null
+    },
+    {
+      "id": "F002",
+      "description": "世界真相暗示",
+      "type": "world_setting",
+      "planted_chapter": null,
+      "planted_context": null,
+      "hints": [],
+      "status": "planned",
+      "importance": "high",
+      "planned_reveal_chapter": 300,
+      "resolved_chapter": null,
+      "resolved_context": null
+    },
+    {
+      "id": "F003",
+      "description": "苏婉的真实身份",
+      "type": "character_secret",
+      "planted_chapter": null,
+      "planted_context": null,
+      "hints": [],
+      "status": "planned",
+      "importance": "medium",
+      "planned_reveal_chapter": 150,
+      "resolved_chapter": null,
+      "resolved_context": null
+    }
+  ],
+  "statistics": {
+    "total": 3,
+    "pending": 1,
+    "planned": 2,
+    "resolved": 0
+  },
+  "metadata": {
+    "last_updated": "第3章",
+    "updated_at": "2024-01-15"
+  }
+}

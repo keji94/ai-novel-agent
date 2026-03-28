@@ -1,0 +1,110 @@
+{
+  "version": "1.0.0",
+  "name": "ai-novel-agent-config",
+
+  "storage": {
+    "primaryPath": "./novels",
+    "knowledgePath": "./knowledge",
+    "referencesPath": "./references",
+
+    "ima": {
+      "enabled": true,
+      "credentials": {
+        "clientId": "${IMA_OPENAPI_CLIENTID}",
+        "apiKey": "${IMA_OPENAPI_APIKEY}"
+      },
+      "syncStrategy": "dual_write",
+      "notebookNaming": {
+        "novel": "小说：《{projectName}》",
+        "knowledge": "写作技巧库"
+      },
+      "syncTargets": {
+        "settings": {
+          "enabled": true,
+          "description": "世界观设定同步"
+        },
+        "characters": {
+          "enabled": true,
+          "description": "角色设定同步"
+        },
+        "outline": {
+          "enabled": true,
+          "description": "大纲同步"
+        },
+        "chapters": {
+          "enabled": true,
+          "description": "章节正文同步"
+        },
+        "context": {
+          "enabled": false,
+          "description": "上下文追踪数据仅本地存储"
+        }
+      },
+      "readFallback": true,
+      "readFallbackOrder": ["local", "ima"]
+    }
+  },
+
+  "writing": {
+    "defaultChapterLength": 2500,
+    "contextWindow": {
+      "summaryDepth": "recent",
+      "maxRecentChapters": 5,
+      "includeForeshadowing": true,
+      "includeTechniques": true
+    },
+    "genreTemplates": {
+      "xianxia": {
+        "name": "仙侠",
+        "powerLevels": ["练气", "筑基", "金丹", "元婴", "化神", "炼虚", "合体", "大乘", "渡劫"]
+      },
+      "xuanhuan": {
+        "name": "玄幻",
+        "powerLevels": ["凡人", "士级", "师级", "宗师", "王级", "皇级", "圣级", "帝级", "神级"]
+      },
+      "dushi": {
+        "name": "都市",
+        "powerLevels": []
+      }
+    }
+  },
+
+  "learning": {
+    "platforms": {
+      "zhihu": {
+        "name": "知乎",
+        "contentTypes": ["short_story", "article", "answer"]
+      },
+      "wechat": {
+        "name": "公众号",
+        "contentTypes": ["article"]
+      },
+      "douyin": {
+        "name": "抖音",
+        "contentTypes": ["video_script"]
+      }
+    },
+    "techniqueCategories": ["structure", "description", "dialogue", "climax", "character"]
+  },
+
+  "projectLifecycle": {
+    "stages": [
+      "brainstorming",
+      "basic_design",
+      "detailed_design",
+      "outlining",
+      "writing",
+      "completed",
+      "paused"
+    ],
+    "stageTransitions": {
+      "brainstorming": ["basic_design"],
+      "basic_design": ["detailed_design", "brainstorming"],
+      "detailed_design": ["outlining", "basic_design"],
+      "outlining": ["writing", "detailed_design"],
+      "writing": ["completed", "paused", "outlining"],
+      "paused": ["writing"],
+      "completed": []
+    }
+  }
+}

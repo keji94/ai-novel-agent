@@ -1,0 +1,96 @@
+{
+  "characters": {
+    "林风": {
+      "name": "林风",
+      "role": "主角",
+      "current_state": {
+        "cultivation": "练气四层",
+        "location": "青云宗外门",
+        "equipment": ["练气丹x3", "普通储物袋"],
+        "skills": ["基础吐纳法(入门)"],
+        "resources": {
+          "spirit_stones": 10,
+          "pills": {
+            "练气丹": 3
+          }
+        },
+        "relationships": {
+          "周长老": "师徒（暗中照顾）",
+          "王刚": "师兄",
+          "李明": "仇敌",
+          "苏婉": "尚未相识"
+        }
+      },
+      "first_appearance": 1,
+      "last_appearance": 3,
+      "state_history": [
+        {
+          "chapter": 1,
+          "change": "穿越觉醒，初始修为练气三层",
+          "type": "initial"
+        },
+        {
+          "chapter": 2,
+          "change": "获得签到系统，首次签到获得练气丹",
+          "type": "ability"
+        },
+        {
+          "chapter": 3,
+          "change": "服用练气丹，修为提升至练气四层",
+          "type": "cultivation"
+        }
+      ]
+    },
+    "李明": {
+      "name": "李明",
+      "role": "反派（初期）",
+      "current_state": {
+        "cultivation": "练气五层",
+        "location": "青云宗外门",
+        "status": "活跃",
+        "relationships": {
+          "林风": "仇敌（欺负对象）"
+        }
+      },
+      "first_appearance": 3,
+      "last_appearance": 3,
+      "state_history": [
+        {
+          "chapter": 3,
+          "change": "首次出场，欺负林风",
+          "type": "initial"
+        }
+      ]
+    },
+    "周长老": {
+      "name": "周长老",
+      "role": "导师型配角",
+      "current_state": {
+        "cultivation": "金丹期",
+        "location": "青云宗外门",
+        "status": "外门长老"
+      },
+      "first_appearance": null,
+      "last_appearance": null,
+      "state_history": []
+    },
+    "苏婉": {
+      "name": "苏婉",
+      "role": "女主",
+      "current_state": {
+        "cultivation": "筑基后期",
+        "location": "青云宗内门",
+        "status": "圣女"
+      },
+      "first_appearance": null,
+      "last_appearance": null,
+      "state_history": []
+    }
+  },
+  "metadata": {
+    "last_updated": "第3章",
+    "updated_at": "2024-01-15",
+    "total_characters": 4,
+    "active_characters": 2
+  }
+}

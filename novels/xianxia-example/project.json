@@ -1,0 +1,91 @@
+{
+  "id": "proj_20240115_xianxia",
+  "name": "仙道长生",
+  "display_name": "仙道长生",
+  "temp_name": null,
+  "is_temp_name": false,
+
+  "genre": "仙侠",
+  "subgenre": "修仙",
+  "style": "热血爽文",
+
+  "lifecycle": {
+    "stage": "writing",
+    "stage_started_at": "2024-01-20T00:00:00Z",
+    "stage_history": [
+      {
+        "from": null,
+        "to": "brainstorming",
+        "at": "2024-01-15T00:00:00Z",
+        "note": "用户表达创作意向"
+      },
+      {
+        "from": "brainstorming",
+        "to": "basic_design",
+        "at": "2024-01-16T00:00:00Z",
+        "note": "确定类型和金手指方向"
+      },
+      {
+        "from": "basic_design",
+        "to": "detailed_design",
+        "at": "2024-01-18T00:00:00Z",
+        "note": "核心设定确认"
+      },
+      {
+        "from": "detailed_design",
+        "to": "outlining",
+        "at": "2024-01-19T00:00:00Z",
+        "note": "世界观和力量体系完成"
+      },
+      {
+        "from": "outlining",
+        "to": "writing",
+        "at": "2024-01-20T00:00:00Z",
+        "note": "大纲完成，开始撰写"
+      }
+    ]
+  },
+
+  "brainstorm": {
+    "genre_candidates": ["仙侠", "玄幻"],
+    "interested_elements": ["穿越", "系统", "修仙", "签到"],
+    "gold_finger_ideas": ["签到系统"],
+    "protagonist_ideas": ["穿越者", "外门弟子"],
+    "key_questions": [
+      {"q": "你喜欢什么类型的小说?", "asked": true, "answered": true, "answer": "仙侠"},
+      {"q": "金手指想要什么类型的?", "asked": true, "answered": true, "answer": "签到系统"},
+      {"q": "主角开局身份?", "asked": true, "answered": true, "answer": "外门弟子"}
+    ],
+    "decisions": {
+      "genre": {"value": "仙侠", "confirmed": true},
+      "gold_finger_type": {"value": "签到系统", "confirmed": true},
+      "protagonist_identity": {"value": "穿越者→外门弟子", "confirmed": true}
+    },
+    "notes": ["用户喜欢爽文风格", "想要签到系统"]
+  },
+
+  "session": {
+    "last_active_at": "2024-01-20T14:30:00Z",
+    "total_sessions": 5,
+    "last_topic": "撰写第1章"
+  },
+
+  "created_at": "2024-01-15T00:00:00Z",
+  "updated_at": "2024-01-20T00:00:00Z",
+  "author": "AI Novel Agent",
+  "description": "一个现代青年穿越到修仙世界，凭借金手指逐步崛起的故事",
+  "tags": ["穿越", "系统", "热血", "爽文"],
+
+  "statistics": {
+    "total_words": 2500,
+    "chapters_completed": 1,
+    "chapters_planned": 100,
+    "target_words": 2000000
+  },
+
+  "settings": {
+    "point_of_view": "第三人称",
+    "update_schedule": "日更两章",
+    "chapter_length": 2500
+  }
+}

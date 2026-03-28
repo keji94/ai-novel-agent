@@ -1,0 +1,48 @@
+{
+  "world_state": {
+    "timeline": {
+      "current_time": "穿越后第3天",
+      "start_point": "林风穿越之日",
+      "major_events": [
+        {
+          "chapter": 1,
+          "event": "林风穿越",
+          "date": "穿越第1天"
+        },
+        {
+          "chapter": 2,
+          "event": "签到系统觉醒",
+          "date": "穿越第2天"
+        }
+      ]
+    },
+    "locations": {
+      "青云宗": {
+        "type": "宗门",
+        "status": "活跃",
+        "hierarchy": ["外门", "内门", "核心"],
+        "important_places": ["外门弟子宿舍", "演武场", "藏经阁"]
+      },
+      "南域": {
+        "type": "区域",
+        "status": "未探索",
+        "description": "青云宗所在的大区域"
+      }
+    },
+    "power_system": {
+      "name": "修仙体系",
+      "levels": ["练气", "筑基", "金丹", "元婴", "化神", "炼虚", "合体", "大乘", "渡劫"],
+      "current_focus": "练气期"
+    },
+    "factions": {
+      "青云宗": {
+        "status": "中立",
+        "relationship_to_protagonist": "所属宗门"
+      }
+    }
+  },
+  "metadata": {
+    "last_updated": "第3章",
+    "updated_at": "2024-01-15"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "collected_at": "2024-01-16T12:00:00Z",
+  "items": [
+    {
+      "id": "ins_001",
+      "type": "element",
+      "content": "签到系统，每天签到获得奖励",
+      "source": "用户提到",
+      "created_at": "2024-01-15T11:00:00Z",
+      "status": "confirmed",
+      "linked_decision": "gold_finger_type"
+    },
+    {
+      "id": "ins_002",
+      "type": "element",
+      "content": "穿越设定，现代人穿越到修仙世界",
+      "source": "用户偏好",
+      "created_at": "2024-01-15T11:30:00Z",
+      "status": "confirmed",
+      "linked_decision": "protagonist_identity"
+    },
+    {
+      "id": "ins_003",
+      "type": "reference",
+      "content": "《最强反套路系统》的搞笑风格作为参考",
+      "source": "用户喜欢",
+      "created_at": "2024-01-15T12:00:00Z",
+      "status": "reference"
+    }
+  ],
+  "questions_pool": [
+    "主角穿越前的身份是什么?",
+    "金手指有什么限制?",
+    "主角的性格是怎样的?",
+    "主要的反派势力是什么?",
+    "主角的目标是什么?"
+  ],
+  "asked_questions": [
+    {
+      "question": "你喜欢什么类型的小说?",
+      "asked_at": "2024-01-15T10:30:00Z",
+      "answer": "仙侠",
+      "answered_at": "2024-01-15T10:31:00Z"
+    },
+    {
+      "question": "金手指想要什么类型的?",
+      "asked_at": "2024-01-15T10:35:00Z",
+      "answer": "签到系统",
+      "answered_at": "2024-01-15T10:36:00Z"
+    }
+  ]
+}

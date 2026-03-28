@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "last_updated": "2024-01-15",
+  "techniques": {
+    "structure": {
+      "description": "结构技巧",
+      "techniques": []
+    },
+    "description": {
+      "description": "描写技巧",
+      "techniques": []
+    },
+    "dialogue": {
+      "description": "对话技巧",
+      "techniques": []
+    },
+    "climax": {
+      "description": "爽点技巧",
+      "techniques": []
+    },
+    "character": {
+      "description": "人物技巧",
+      "techniques": []
+    },
+    "platform": {
+      "description": "平台/形式特有技巧",
+      "subcategories": {
+        "zhihu_short": {
+          "description": "知乎短篇技巧",
+          "techniques": []
+        },
+        "wechat_article": {
+          "description": "公众号文章技巧",
+          "techniques": []
+        },
+        "douyin_script": {
+          "description": "抖音脚本技巧",
+          "techniques": []
+        }
+      }
+    }
+  },
+  "metadata": {
+    "total_techniques": 0,
+    "by_platform": {
+      "zhihu": 0,
+      "wechat": 0,
+      "douyin": 0
+    },
+    "by_content_type": {}
+  }
+}

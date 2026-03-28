@@ -1,0 +1,7 @@
+.idea/
+.env
+*.log
+logs/*
+!logs/.gitkeep
+references/*
+!references/.gitkeep
