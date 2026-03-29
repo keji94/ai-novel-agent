@@ -77,7 +77,14 @@
        "task": "审核大纲\n项目: {项目名}\n大纲目录: ./novels/{项目名}/outline/\n审核重点: 世界观逻辑、力量体系自洽性、角色动机、剧情节奏、伏笔可行性、金手指平衡\n审核模式: standard",
        "label": "审核大纲-{项目名}"
      })
-  4. 返回 Planner 结果 + Editor 审核报告给用户（不询问，自动执行）
+  4. Editor 审核完成 → 将审核报告反馈给 Planner 修订
+     sessions_spawn({
+       "agentId": "planner",
+       "task": "修订大纲\n项目: {项目名}\n审核报告: {Editor返回的审核结果}\n要求: 修复所有Critical问题，逐条回应Warning问题，保留已确认的亮点",
+       "label": "修订大纲-{项目名}"
+     })
+  5. Planner 修订完成 → 可选：Editor 复审（如有Critical问题修复）
+  6. 返回最终大纲给用户
 ```
 
 ### 规则2: 内容撰写流程

@@ -1,0 +1,27 @@
+{
+  "id": "proj_20260329_074000",
+  "name": "未命名创作项目_20260329",
+  "is_temp_name": true,
+  "target": "知乎盐言故事·长篇创作马拉松第五季",
+  "track": "热血悬疑",
+  "subgenre": "古风悬疑探案",
+  "lifecycle": {
+    "stage": "brainstorming",
+    "stage_started_at": "2026-03-29T07:40:00+08:00"
+  },
+  "session": {
+    "last_active_at": "2026-03-29T07:40:00+08:00",
+    "last_topic": "灵感探索-古风悬疑探案"
+  },
+  "brainstorm": {
+    "decisions": {
+      "track": "热血悬疑",
+      "subgenre": "古风悬疑探案"
+    }
+  },
+  "statistics": {
+    "total_words": 0,
+    "chapters_completed": 0
+  },
+  "created_at": "2026-03-29T07:40:00+08:00"
+}

@@ -1,0 +1,20 @@
+{
+  "id": "proj_20260329_091200",
+  "name": "末世古物共鸣",
+  "is_temp_name": true,
+  "lifecycle": {"stage": "brainstorming", "stage_started_at": "2026-03-29T09:12:00+08:00"},
+  "session": {"last_active_at": "2026-03-29T09:12:00+08:00", "last_topic": "开始规划大纲"},
+  "brainstorm": {
+    "decisions": {
+      "worldview": "异族入侵，人类通过与古物共鸣觉醒超凡力量对抗异族。动物也受神秘力量觉醒。",
+      "geography": "人类依托古建物保护罩生存，分三环、二环、核心区域。三环外挣扎求生。",
+      "protagonist": "穿越者，穿到独臂男孩身上，独臂背后有身份谜团",
+      "previous_job": "博物馆保安（接地气，日常接触文物，现代知识成为末世优势）",
+      "golden_finger": "古物星河（点亮古物图鉴）+ 造化炉（炼制各种物品）",
+      "opening": "废墟崛起（末世已发生N年，三环外底层意外获得金手指）",
+      "style": "底层逆袭，智取为主"
+    }
+  },
+  "statistics": {"total_words": 0, "chapters_completed": 0},
+  "created_at": "2026-03-29T09:12:00+08:00"
+}
