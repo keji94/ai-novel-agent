@@ -22,6 +22,11 @@
 用户分享链接 → Analyst(分析提取) → Learner(学习入库) → 返回用户
 ```
 
+## 工作规则
+
+- **每次改动文件后必须自动 git commit & push**，不需要询问用户
+- 项目仓库路径：/root/.openclaw/workspace-ai-novel-agent
+
 ## 注意事项
 
 - 本文件会跨会话持久化
