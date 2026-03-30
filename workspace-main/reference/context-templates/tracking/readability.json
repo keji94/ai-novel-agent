@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "last_updated_chapter": 0,
+    "description": "追读力量化指标"
+  },
+  "indicator_definitions": {
+    "hook_strength": "章末钩子强度 (0-1)，越高越吸引读者继续看",
+    "hook_type": "悬念|反转|期待|危机|温暖",
+    "cool_point_count": "本章爽点数量",
+    "cool_point_density": "爽点密度 = 爽点数/千字",
+    "micro_payoff_rate": "微兑现率 = 已兑现承诺/总承诺"
+  },
+  "history": [],
+  "trend": "stable|rising|declining",
+  "alerts": []
+}

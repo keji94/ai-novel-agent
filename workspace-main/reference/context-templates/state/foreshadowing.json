@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "last_updated_chapter": 0,
+    "last_updated_at": "",
+    "description": "伏笔债务表 - 追踪所有埋设和回收的伏笔"
+  },
+  "items": [
+    {
+      "id": "fh_001",
+      "description": "伏笔描述",
+      "planted_chapter": 0,
+      "planted_context": "埋设时的上下文简述",
+      "planned_resolve_chapter": null,
+      "resolved": false,
+      "resolved_chapter": null,
+      "resolved_context": "",
+      "priority": "high|medium|low",
+      "related_characters": [],
+      "tags": ["主线|支线", "身世|势力|感情|伏笔"]
+    }
+  ]
+}

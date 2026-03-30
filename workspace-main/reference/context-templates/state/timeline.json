@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "last_updated_chapter": 0,
+    "description": "时间线 - 追踪故事内时间的流逝"
+  },
+  "entries": [
+    {
+      "chapter": 0,
+      "story_date": "",
+      "time_span": "",
+      "events": ["事件1", "事件2"]
+    }
+  ]
+}

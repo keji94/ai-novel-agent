@@ -1,0 +1,29 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "last_updated_chapter": 0,
+    "ideal_ratio": { "quest": 60, "fire": 20, "constellation": 20 },
+    "description": "Strand Weave节奏平衡表"
+  },
+  "rules": {
+    "quest_max_consecutive": 5,
+    "fire_max_gap": 10,
+    "constellation_max_gap": 15
+  },
+  "strand_definitions": {
+    "quest": "主线剧情，推动核心冲突",
+    "fire": "感情线，人物关系发展",
+    "constellation": "世界观扩展，背景/势力/设定"
+  },
+  "history": [],
+  "stats": {
+    "total": 0,
+    "quest_count": 0,
+    "fire_count": 0,
+    "constellation_count": 0,
+    "quest_ratio": 0,
+    "fire_ratio": 0,
+    "constellation_ratio": 0
+  },
+  "alerts": []
+}

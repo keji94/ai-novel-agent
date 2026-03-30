@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "last_updated_chapter": 0,
+    "last_updated_at": "",
+    "description": "角色当前状态卡 - 每章Phase 2结算后更新"
+  },
+  "characters": {
+    "角色名": {
+      "id": "char_001",
+      "role": "protagonist|supporting|antagonist|mentor|minor",
+      "profile": "一句话描述角色的核心特质",
+      "current_state": {
+        "realm_or_level": "",
+        "location": "",
+        "equipment": [],
+        "status": "正常|受伤|失踪|死亡",
+        "mood": ""
+      },
+      "appearance_chapters": [],
+      "last_appearance": 0,
+      "relationships": {
+        "其他角色名": "关系描述"
+      }
+    }
+  }
+}
