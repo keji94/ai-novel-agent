@@ -1,0 +1,29 @@
+# Critic Agent 协作配置
+
+## 可调用 Agent
+
+无。Critic 是独立审计角色，不调用其他 Agent。
+
+## 与其他 Agent 的关系
+
+| 关系 | Agent | 说明 |
+|------|-------|------|
+| 被调用 | Supervisor (workspace-main) | 由 Supervisor 编排调用 |
+| 输出消费者 | Planner (workspace-planner) | 审计报告由 Supervisor 转交给 Planner 修复 |
+| 前置条件 | Planner | 需要 Planner 先完成世界观构建 |
+| 互补关系 | Editor | Editor 审计写作质量，Critic 审计世界观设计质量 |
+
+## 调用方式
+
+Critic 仅通过 `sessions_spawn` 异步调用，不需要多轮交互。
+
+```
+调用: sessions_spawn("critic", {
+  worldbuilding_files: ["novels/{项目}/outline/世界观设定.md", ...],
+  audit_mode: "comprehensive" | "focused",
+  project_preferences: {...},
+  previous_report: {...}  // focused 模式时必需
+})
+
+返回: 审计报告（JSON格式）
+```

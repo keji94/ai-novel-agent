@@ -14,6 +14,7 @@
 | Analyst | 网文分析 | 作品分析、结构拆解、**多渠道技巧提取** |
 | Operator | 运营/分析 | 市场分析、读者研究、运营策略 |
 | Learner | 知识管理 | **技巧入库、知识检索、反馈处理** |
+| Critic | 世界观骇客 | **世界观设定审计、15维度质量检查、Fix Loop回归审计** |
 
 ## 任务路由规则
 
@@ -34,13 +35,80 @@
 
 ```
 条件: 用户要创作新小说
-动作:
-  1. sessions_spawn("planner", 创建世界观和大纲)
-  2. sessions_spawn("editor", 审核大纲, standard模式)
-  3. sessions_spawn("planner", 修订大纲, 修复Critical+回应Warning)
-  4. 如有Critical修复 → Editor 复审
-  5. 返回最终大纲给用户
+
+Phase 1-2: 构建初始框架（已有）
+  1. sessions_send("planner", mode:"brainstorm") → 引导用户明确方向
+  2. sessions_spawn("planner", mode:"create") → 构建世界观和大纲
+
+Phase 3: 世界观审计（新增）
+  3. sessions_spawn("critic", {
+       worldbuilding_files: outline/世界观设定*.md,
+       audit_mode: "comprehensive",
+       project_preferences: project.json.worldbuilding_preferences
+     }) → comprehensive_report
+
+Phase 4: Fix Loop（新增，最多3轮）
+  4. round = 1
+  5. WHILE round <= 3 AND NOT comprehensive_report.converged:
+       a. sessions_spawn("planner", mode:"worldbuilding_fix", {
+            audit_report: comprehensive_report / focused_report
+          }) → 修复说明
+       b. sessions_spawn("critic", {
+            worldbuilding_files: outline/世界观设定*.md,
+            audit_mode: "focused",
+            previous_report: 上一轮报告,
+            project_preferences: project.json.worldbuilding_preferences
+          }) → focused_report
+       c. round += 1
+
+  收敛条件: critical_count == 0 AND warning_count <= 3
+
+  未收敛处理:
+    - 汇总所有 unresolved_issues
+    - 进入 Phase 5 由用户决策
+
+Phase 5: User Checkpoint（新增）
+  6. 展示给用户:
+     - 审计评级 + 评分趋势
+     - 亮点列表（已解决的重要问题）
+     - 待解决问题清单（如有）
+     - 收敛/未收敛状态
+  7. 用户选择:
+     ├── 批准 → 进入 Phase 7
+     ├── 要求修改 → 指定修改方向 → 进入 Phase 6
+     └── 调整方向 → 回到 Phase 1-2
+
+Phase 6: 定向修复（新增，按需）
+  8. sessions_spawn("planner", mode:"worldbuilding_fix", {
+       audit_report: report,
+       user_feedback: 用户指定方向
+     })
+  9. sessions_spawn("critic", { audit_mode: "focused", ... })
+  10. 回到 Phase 5
+
+Phase 7: 衔接 Editor（已有）
+  11. sessions_spawn("editor", 审核大纲, standard模式)
+  12. 如有Critical修复 → Editor 复审
+  13. 返回最终大纲给用户
 ```
+
+#### Critic 调用说明
+
+| 参数 | 说明 |
+|------|------|
+| worldbuilding_files | 世界观设定文件路径列表，从 outline/ 目录匹配 `世界观设定*.md` |
+| audit_mode | `comprehensive`（首轮全面审计）/ `focused`（回归审计） |
+| project_preferences | 从 project.json 读取 worldbuilding_preferences |
+| previous_report | focused 模式时必需，传入上一轮审计报告 |
+
+#### 偏好学习触发
+
+| 用户行为 | 学习动作 |
+|---------|---------|
+| 批准带有 warning 的版本 | 将该 warning 类型写入 project.json → accepted_flaws |
+| 手动修改 Critic 建议的修复方向 | 写入 project.json → critic_overrides |
+| brainstorm 阶段强调某方面 | 写入 project.json → priorities |
+| 多个项目中一致偏好 | 从 project.json 提升到 USER.md |
 
 ### 规则2: 内容撰写流程
 

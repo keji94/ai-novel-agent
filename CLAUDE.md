@@ -3,8 +3,10 @@
 基于 OpenClaw workspace 架构 + Harness 工程思想的 **AI 网文写作框架**。
 
 ## 项目定位
-
 这是一个多 Agent 协作的网文创作系统，Main Agent 作为 Supervisor 路由用户请求到专业子 Agent，覆盖从灵感探索到成稿的完整创作流程。
+
+## 项目配置修改约束
+为了防止项目的配置文件如 AGENT.md SOUL.md过于膨胀。你在修改这类文件后，都需要重新审视一下文件的大小，如果文件过于庞大，则需要做拆分和渐进式加载
 
 ## 目录结构
 
@@ -21,6 +23,7 @@ ai-novel-agent/
 ├── workspace-detector/      # Detector AI痕迹检测器
 ├── workspace-chapter-analyzer/  # ChapterAnalyzer 章节逆向分析
 ├── workspace-style-analyzer/    # StyleAnalyzer 文风分析器
+├── workspace-critic/            # Critic 世界观骇客（15维度审计 + Fix Loop回归）
 ├── novels/                  # 小说项目存储（各 Agent 共享）
 │   └── {项目名}/
 │       ├── project.json     # 项目元数据 & 生命周期状态
@@ -47,7 +50,7 @@ ai-novel-agent/
 | 规则 | 触发场景 | 流程 |
 |------|---------|------|
 | 0 灵感探索 | 模糊创作意向 | 恢复/创建项目 → Planner brainstorm |
-| 1 新小说创作 | 明确创作需求 | Planner → Editor 审核 → Planner 修订 |
+| 1 新小说创作 | 明确创作需求 | Planner创建 → Critic审计 → Fix Loop(最多3轮) → User Checkpoint → Editor审核 |
 | 2 内容撰写 | 写具体章节 | Writer → Editor 自动审核 |
 | 3 分析学习 | 分享链接/学技巧 | Analyst 提取 → Editor 一审 → Learner 入库 → Editor 二审 |
 | 4 章节导入 | 续写已有小说 | ChapterAnalyzer → 生成真相文件 |
