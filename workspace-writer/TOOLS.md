@@ -1,46 +1,32 @@
-# Writer 工具手册 v2.0
+# Writer 工具手册 v3.0
 
-> **重大升级**: 实现两阶段写作 + 写后验证器 + 7个真相文件管理
-
----
-
-## 核心能力：两阶段写作架构
-
-### 为什么需要两阶段？
-
-**问题**:
-- 单阶段写作时，创意写作（temp 0.7）和状态结算（temp 0.3）混在一起
-- 创意要求高温度，但状态追踪要求精确
-- 导致：状态更新不准确，长篇一致性差
-
-**解决**:
-```
-Phase 1: 创意写作 (temperature: 0.7)
-  - 只输出章节正文
-  - 创造性表达，不受约束
-
-Phase 2: 状态结算 (temperature: 0.3)
-  - 分析正文，更新所有真相文件
-  - 精确追踪，确保一致性
-```
+> **v3.0 重大升级**: 渐进式上下文管理系统 + Phase 0 上下文组装 + 增强版 Phase 2 状态结算
 
 ---
 
-## 两阶段写作流程
+## 核心能力：三阶段写作架构
+
+### Phase 0: 上下文组装（新增）
+- **输入**: 项目索引 + 章节大纲
+- **输出**: ~7K字的写作上下文
+- **机制**: 三级渐进式加载（必选→条件→按需）
+
+> 详细实现见 reference/two-phase-prompts.md Phase 0 部分
+> 完整规范见 reference/progressive-context-system.md（主工作区）
 
 ### Phase 1: 创意写作
-- **输入**: 7个真相文件（只读）、章节大纲、创作指导（可选）、风格指南（可选）
-- **输出**: 章节标题 + 章节正文（2000-3000字）
+- **输入**: Phase 0 组装的上下文 + 章节大纲 + 风格指南
+- **输出**: 章节标题 + 正文（2000-3000字）
 - **模型**: temperature 0.7, max_tokens 8192
 
-> 详细实现见 reference/two-phase-prompts.md
+> 详细实现见 reference/two-phase-prompts.md Phase 1 部分
 
-### Phase 2: 状态结算
-- **输入**: Phase 1 章节正文 + 当前 7 个真相文件
-- **输出**: 更新后的 7 个真相文件
+### Phase 2: 状态结算（增强版）
+- **输入**: Phase 1 章节正文 + 当前上下文文件
+- **输出**: 更新 11 个文件（7个状态 + 4个追踪）
 - **模型**: temperature 0.3, max_tokens 4096
 
-> 详细实现见 reference/two-phase-prompts.md
+> 详细实现见 reference/two-phase-prompts.md Phase 2 部分
 
 ---
 
@@ -52,62 +38,81 @@ Phase 2: 状态结算 (temperature: 0.3)
 
 ---
 
-## 7 个真相文件管理
+## 上下文文件管理（v3.0 渐进式系统）
 
-### 文件列表
+### 文件结构
 
-| 文件 | 路径 | 用途 |
-|------|------|------|
-| `current_state.md` | `context/tracking/current_state.md` | 世界状态：地点、势力、已知信息 |
-| `particle_ledger.md` | `context/tracking/particle_ledger.md` | 资源账本：物品、金钱、修炼资源 |
-| `pending_hooks.md` | `context/tracking/foreshadowing.json` | 伏笔钩子：未闭合伏笔 |
-| `chapter_summaries.md` | `context/summaries/chapter_summaries.md` | 章节摘要 |
-| `subplot_board.md` | `context/tracking/subplot_board.md` | 支线进度板 |
-| `emotional_arcs.md` | `context/tracking/emotional_arcs.md` | 情感弧线 |
-| `character_matrix.md` | `context/tracking/character_states.json` | 角色矩阵：关系、信息边界 |
+```
+novels/{项目}/context/
+├── state/                              ← 状态文件（Phase 2 更新）
+│   ├── characters.json                 ← 角色当前状态卡
+│   ├── foreshadowing.json              ← 伏笔债务表
+│   ├── world_state.json                ← 世界当前状态
+│   └── timeline.json                   ← 时间线
+├── summaries/                          ← 摘要文件（滚动窗口）
+│   ├── recent.md                       ← 最近10章详细摘要
+│   └── vol_X_summary.md                ← 卷摘要
+├── descriptions/                       ← 防重复索引
+│   └── scenes_index.md                 ← 场景/战斗/情感描写索引
+└── tracking/                           ← 追踪文件（Phase 2 更新）
+    ├── strand_balance.json             ← Strand Weave 节奏平衡
+    ├── readability.json                ← 追读力量化指标
+    ├── character_relations.json        ← 角色关系图谱
+    ├── particle_ledger.md              ← 资源账本
+    └── character_states.json           ← 角色矩阵（兼容旧版）
+```
 
-### 写入顺序
+### Phase 2 结算写入顺序
 
-Phase 2 结算时，按以下顺序更新：
-1. `current_state.md` - 世界状态
-2. `particle_ledger.md` - 资源账本
-3. `pending_hooks` - 伏笔
-4. `character_matrix` - 角色
-5. `chapter_summaries` - 摘要
-6. `emotional_arcs` - 情感
-7. `subplot_board` - 支线
+```
+1. characters.json      - 角色状态变化
+2. foreshadowing.json   - 伏笔新增/回收
+3. world_state.json     - 世界状态变化
+4. timeline.json        - 时间线推进
+5. recent.md            - 追加本章摘要
+6. strand_balance.json  - 节奏统计
+7. readability.json     - 追读力指标
+8. character_relations.json - 关系变化
+9. scenes_index.md      - 场景索引
+10. particle_ledger.md  - 资源变化
+11. character_states.json - 角色矩阵
+```
+
+### 摘要滚动规则
+- recent.md 保留最近10章
+- 超过10章 → 最早的5章压缩为卷摘要
+- 卷摘要超10卷 → 压缩为全书摘要
 
 ---
 
-## 完整写作流程（新版）
+## 完整写作流程（v3.0）
 
 ```
 1. 接收写作任务
    ↓
-2. 读取所有真相文件
+2. Phase 0: 渐进式上下文组装
+   ├─ 第一层: characters.json + foreshadowing.json + recent.md
+   ├─ 第二层: 相关设定 + strand_alerts + readability_trend
+   └─ 第三层: scenes_index + relations（按需）
    ↓
 3. Phase 1: 创意写作 (temp 0.7)
-   ├─ 读取上下文
-   ├─ 生成章节正文
+   ├─ 基于组装上下文生成正文
    └─ 输出标题+正文
    ↓
 4. 写后验证器
-   ├─ 11 条规则检测
+   ├─ 11条规则检测
    ├─ 发现 error → 自动 spot-fix
    └─ 发现 warning → 记录日志
    ↓
-5. Phase 2: 状态结算 (temp 0.3)
-   ├─ 分析章节正文
-   ├─ 提取状态变化
-   └─ 更新所有真相文件
+5. Phase 2: 状态结算增强版 (temp 0.3)
+   ├─ 更新 7个状态文件
+   ├─ 更新 4个追踪文件
+   ├─ 检查摘要滚动（>10章时压缩）
+   └─ 一致性校验
    ↓
 6. 写入章节文件
    ↓
 7. 返回结果
-   ├─ 章节内容
-   ├─ 验证结果
-   ├─ 状态更新摘要
-   └─ Token 用量
 ```
 
 ---
