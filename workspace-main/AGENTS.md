@@ -332,3 +332,62 @@ Step 4: 结果处理
 - 本 Skill 可独立运行，也可嵌入规则 1 Phase 3 前作为前置深度审计
 - 通用审计中 C2 评为 critical 时，建议升级触发本 Skill
 - 本 Skill 的审计结果不影响通用 15 维度审计的独立运行
+
+---
+
+## 规则12: 资源体系专项审计流程
+
+```
+条件: 用户请求审计/创建资源体系，或通用审计 C1 升级为 critical
+
+Skill 规范: workspace-critic/skills/resource-system-review/SKILL.md
+维度规范: workspace-critic/skills/resource-system-review/reference/dimensions.md
+准出规则: workspace-critic/skills/resource-system-review/reference/convergence-criteria.md
+
+Step 1: 模式判断
+  - exists("outline/世界观设定-资源体系.md") → modify 模式
+  - not exists → create 模式
+
+Step 2 (create 模式): 生成初始资源体系
+  sessions_spawn("planner", mode:"resource_system_draft", {
+    project: novels/{项目名},
+    genre: project.json.genre,
+    existing_worldbuilding: [outline/世界观设定*.md excluding 资源体系],
+    user_preferences: project.json.worldbuilding_preferences,
+    cross_file_refs: ["世界观设定-社会结构.md", "世界观设定-聚集地格局.md"]
+  })
+
+Step 3: 审计-修复循环（最多4轮）
+  round = 1
+  WHILE round <= 4 AND NOT converged:
+
+    audit_mode = (round == 1) ? "comprehensive" : "focused"
+    audit_report = sessions_spawn("critic", {
+      worldbuilding_files: ["outline/世界观设定-资源体系.md"],
+      audit_mode: audit_mode,
+      skill_context: "resource-system-review",
+      dimension_spec: "workspace-critic/skills/resource-system-review/reference/dimensions.md",
+      convergence_spec: "workspace-critic/skills/resource-system-review/reference/convergence-criteria.md",
+      previous_report: (round > 1) ? last_report : null,
+      project_preferences: project.json.worldbuilding_preferences
+    })
+
+    converged = evaluate_convergence(audit_report)
+    IF converged: BREAK
+
+    sessions_spawn("planner", mode:"worldbuilding_fix", {
+      audit_report: audit_report,
+      target_scope: "resource_system"
+    })
+
+    last_report = audit_report
+    round += 1
+
+Step 4: 结果处理（同规则11）
+```
+
+### 与社会结构审计的区别
+
+- 跨文件联动：资源体系修复常需同步更新社会结构、聚集地格局等文件（RS8 维度）
+- create 模式需传入 cross_file_refs 参数，planner 据此进行交叉数据检查
+- 修复说明中必须列出所有跨文件变更
