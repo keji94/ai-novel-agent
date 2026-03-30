@@ -251,3 +251,84 @@ Step 6: 返回学习结果（提取X条，通过Y条，拒绝W条，更新分类
 - **上下文不足**: 告知缺少信息 → 引导补充 → 无法补充用默认值
 - **Agent调用失败**: 记录错误 → 尝试替代方案 → 返回部分结果
 - **超出能力范围**: 诚实说明限制 → 提供替代方案 → 建议调整需求
+
+---
+
+## 规则11: 社会结构专项审计流程
+
+```
+条件: 用户请求审计/创建社会结构，或通用审计 C2 升级为 critical
+
+Skill 规范: workspace-critic/skills/social-structure-review/SKILL.md
+维度规范: workspace-critic/skills/social-structure-review/reference/dimensions.md
+准出规则: workspace-critic/skills/social-structure-review/reference/convergence-criteria.md
+
+Step 1: 模式判断
+  - exists("outline/世界观设定-社会结构.md") → modify 模式
+  - not exists → create 模式
+
+Step 2 (create 模式): 生成初始社会结构
+  sessions_spawn("planner", mode:"social_structure_draft", {
+    project: novels/{项目名},
+    genre: project.json.genre,
+    existing_worldbuilding: [outline/世界观设定*.md excluding 社会结构],
+    user_preferences: project.json.worldbuilding_preferences
+  })
+
+Step 3: 审计-修复循环（最多4轮）
+  round = 1
+  WHILE round <= 4 AND NOT converged:
+
+    // 3a: 审计
+    audit_mode = (round == 1) ? "comprehensive" : "focused"
+    audit_report = sessions_spawn("critic", {
+      worldbuilding_files: ["outline/世界观设定-社会结构.md"],
+      audit_mode: audit_mode,
+      skill_context: "social-structure-review",
+      dimension_spec: "workspace-critic/skills/social-structure-review/reference/dimensions.md",
+      convergence_spec: "workspace-critic/skills/social-structure-review/reference/convergence-criteria.md",
+      previous_report: (round > 1) ? last_report : null,
+      project_preferences: project.json.worldbuilding_preferences
+    })
+
+    // 3b: 检查收敛
+    converged = (
+      audit_report.critical_count == 0
+      AND audit_report.warning_count <= 2
+      AND (audit_report.total_score / 8.0) >= 7.0
+      AND min(dimension_scores) >= 4
+    )
+    IF converged: BREAK
+
+    // 3c: 趋势判断（第2轮起）
+    IF round >= 2 AND audit_report.trend.direction == "stagnant":
+      提示用户：修复进入平台期，可指定修复方向或接受当前版本
+
+    // 3d: 修复
+    sessions_spawn("planner", mode:"worldbuilding_fix", {
+      audit_report: audit_report,
+      target_scope: "social_structure"
+    })
+
+    last_report = audit_report
+    round += 1
+
+Step 4: 结果处理
+  IF converged:
+    展示: 最终评级 + 评分趋势 + 亮点保留确认
+  ELSE:
+    用户检查点:
+    - 评分趋势 (R1→R2→R3→R4)
+    - 已解决/待解决问题清单
+    - 最大阻塞项
+    用户选择:
+    ├── 批准当前版本 → 记录 accepted_flaws → 完成
+    ├── 定向修复 → 指定维度 → 再执行1轮 focused（不计入4轮）
+    └── 重新设计 → 回到 Step 2（将本次审计报告作为经验传入）
+```
+
+### 与通用 Fix Loop 的关系
+
+- 本 Skill 可独立运行，也可嵌入规则 1 Phase 3 前作为前置深度审计
+- 通用审计中 C2 评为 critical 时，建议升级触发本 Skill
+- 本 Skill 的审计结果不影响通用 15 维度审计的独立运行

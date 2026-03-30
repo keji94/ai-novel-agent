@@ -27,3 +27,10 @@ Critic 仅通过 `sessions_spawn` 异步调用，不需要多轮交互。
 
 返回: 审计报告（JSON格式）
 ```
+
+## Skills
+
+### social-structure-review
+- **路径**: `skills/social-structure-review/SKILL.md`
+- **说明**: 社会结构专项审计-修复循环。8 维度深度审计（SS1-SS8），支持 create/modify 双模式，最多 4 轮循环直到准出。由 Supervisor 按照技能规范编排执行。
+- **注意**: 本技能的 8 维度审计体系独立于 TOOLS.md 中的通用 15 维度，仅在社会结构专项审计时激活。维度规范和准出标准详见 `skills/social-structure-review/reference/`。
