@@ -19,9 +19,8 @@
 流程:
   1. 识别平台类型（微信/知乎/抖音）
   2. 调用对应解析工具获取内容
-     - fetch_wechat_article (微信公众号)
-     - fetch_zhihu_article (知乎文章)
-     - fetch_douyin_video (抖音视频)
+     - 如果是网页，使用playwright-scraper 隐私模式或者 openclaw-tavily-search skill
+     - 如果是抖音视频，使用yzfly-douyin-mcp-server-douyin-video skill
   3. 使用 extract_writing_tips 提取技巧
      - 自动模式：智能识别内容类型和主题
      - 手动模式：按用户指定类型提取
