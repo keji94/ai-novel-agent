@@ -89,6 +89,11 @@ Phase 3.5: 专项审计（新增）
       files: "世界观设定-*修炼*.md | *力量*.md | *功法*.md | *共鸣*.md | *魔法*.md | *能力*.md | *灵力*.md",
       trigger_dimension: "B1",
       rule: "规则14"
+    },
+    "protagonist-review": {
+      files: "主角设定.md | 主角*.md | *主角*.md | 角色设定.md | characters/*.md",
+      trigger_dimension: "B2",
+      rule: "规则15"
     }
   }
 
@@ -608,3 +613,98 @@ Step 4: 结果处理（同规则11）
 - **灵活文件检测**：不绑定特定文件名，支持"修炼""力量""功法""共鸣""魔法""能力""灵力"等多种命名
 - **system_name 聚焦**：当目标文件包含多个体系时，通过 system_name 参数聚焦审计范围
 - **Planner 全量上下文**：力量体系修改最易引发连锁反应，修复时必须传入全部世界观文件
+
+---
+
+## 规则15: 主角设定专项审计流程
+
+```
+条件: 用户请求审计/创建主角设定，或通用审计 B2（金手指合理性）升级为 critical
+
+Skill 规范: workspace-critic/skills/protagonist-review/SKILL.md
+维度规范: workspace-critic/skills/protagonist-review/reference/dimensions.md
+准出规则: workspace-critic/skills/protagonist-review/reference/convergence-criteria.md
+
+Step 1: 目标文件检测
+  IF user_request.target_file:
+    target_file = user_request.target_file
+  ELIF user_request.protagonist_name:
+    target_file = search(project_path + "/outline/", user_request.protagonist_name)
+  ELSE:
+    target_file = glob_first(project_path + "/outline/主角设定.md")
+              || glob_first(project_path + "/outline/主角*.md")
+              || glob_first(project_path + "/outline/角色设定.md")
+  IF target_file → modify 模式
+  IF not found → create 模式
+
+Step 2 (create 模式): 生成初始主角设定
+  other_worldbuilding = glob(project_path + "/outline/世界观设定*.md")
+
+  sessions_spawn("planner", mode:"protagonist_draft", {
+    project: novels/{项目名},
+    genre: project.json.genre,
+    protagonist_name: user_request.protagonist_name,
+    existing_worldbuilding: other_worldbuilding,
+    user_preferences: project.json.worldbuilding_preferences
+  })
+
+Step 3: 审计-修复循环（最多4轮）
+  // 关联文件收集（受上下文预算控制）
+  related_files = collect_related_files({
+    required: glob(project_path + "/outline/世界观设定-*力量*.md | *修炼*.md | *共鸣*.md | *社会*.md | *势力*.md"),
+    suggested: glob(project_path + "/outline/总大纲.md | *资源*.md"),
+    budget: 30000  // token 上限
+  })
+
+  round = 1
+
+  WHILE round <= 4 AND NOT converged:
+    // 3a: 审计
+    audit_mode = (round == 1) ? "comprehensive" : "focused"
+    audit_report = sessions_spawn("critic", {
+      target_files: [target_file],
+      related_files: related_files,
+      audit_mode: audit_mode,
+      skill_context: "protagonist-review",
+      dimension_spec: "workspace-critic/skills/protagonist-review/reference/dimensions.md",
+      convergence_spec: "workspace-critic/skills/protagonist-review/reference/convergence-criteria.md",
+      previous_report: (round > 1) ? last_report : null,
+      protagonist_name: user_request.protagonist_name,
+      project_preferences: project.json.worldbuilding_preferences
+    })
+
+    // 3b: 收敛检查
+    converged = (
+      critical_count == 0
+      AND warning_count <= 2
+      AND average_score >= 7.0
+      AND min_dimension_score >= 4
+    )
+    IF converged: BREAK
+
+    // 3c: 趋势判断
+    IF round >= 2 AND audit_report.trend.direction == "stagnant":
+      present_stagnation_warning(audit_report)
+
+    // 3d: 修复（传入全部世界观文件）
+    fix_result = sessions_spawn("planner", {
+      mode: "worldbuilding_fix",
+      audit_report: audit_report,
+      target_scope: "protagonist",
+      protagonist_name: user_request.protagonist_name,
+      existing_worldbuilding: glob(project_path + "/outline/世界观设定*.md")
+    })
+
+    last_report = audit_report
+    round += 1
+
+Step 4: 结果处理（同规则11）
+```
+
+### 主角设定审计的特殊设计
+
+- **跨文件验证**：主角的金手指、社会定位、成长上限必须与力量体系（等级天花板）、社会结构（阶层流动）、种族势力（血统限制）交叉验证
+- **上下文预算控制**：主角审计涉及多文件交叉验证，但全部传入会超出上下文限制。采用分级策略：必传力量体系+社会结构（影响最大），建议传大纲+资源体系（锦上添花），总预算 ≤ 30000 token
+- **金手指数量审计**：PC2 维度专门审计金手指数量和平衡性，防止"全方位无死角"的主角设计
+- **弱点真实性检查**：PC3 维度检查每个"弱点"是否有即时解决方案——有解决方案的弱点不是真弱点
+- **与通用 B2 的升级关系**：通用审计 B2（金手指合理性）评为 critical 时自动升级为本专项审计
