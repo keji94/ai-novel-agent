@@ -67,7 +67,56 @@ Phase 4: Fix Loop（新增，最多3轮）
     - 汇总所有 unresolved_issues
     - 进入 Phase 5 由用户决策
 
-Phase 5: User Checkpoint（新增）
+Phase 3.5: 专项审计（新增）
+  // 通用审计收敛后，根据文件和 critical 维度自动触发专项审计
+  skill_map = {
+    "social-structure-review": {
+      files: "世界观设定-社会结构*.md",
+      trigger_dimension: "C2",
+      rule: "规则11"
+    },
+    "resource-system-review": {
+      files: "世界观设定-资源体系*.md",
+      trigger_dimension: "C1",
+      rule: "规则12"
+    },
+    "race-faction-review": {
+      files: "世界观设定-*族*.md | *势力*.md | *敌*.md | *种族*.md",
+      trigger_dimension: "B3",
+      rule: "规则13"
+    },
+    "power-system-review": {
+      files: "世界观设定-*修炼*.md | *力量*.md | *功法*.md | *共鸣*.md | *魔法*.md | *能力*.md | *灵力*.md",
+      trigger_dimension: "B1",
+      rule: "规则14"
+    }
+  }
+
+  // 收集触发列表
+  skills_to_run = []
+  FOR skill_name, config IN skill_map:
+    file_matched = glob(project_path + "/outline/" + config.files).length > 0
+    dimension_critical = comprehensive_report.dimensions[config.trigger_dimension]?.severity == "critical"
+    not_skipped = skill_name NOT IN project.json.worldbuilding_preferences.skip_specialized_audits
+    IF (file_matched OR dimension_critical) AND not_skipped:
+      skills_to_run.append({name: skill_name, ...config})
+
+  // 执行专项审计（每个 Skill 独立运行自己的审计-修复循环）
+  specialized_results = {}
+  FOR skill IN skills_to_run:
+    specialized_results[skill.name] = run_specialized_audit(skill.name, project_path)
+    // 每个 Skill 内部：comprehensive → fix → focused → fix → ... (最多4轮)
+
+  // 汇总结果
+  all_specialized_issues = merge_all(specialized_results.*.issues)
+  not_converged_skills = [name FOR name, result IN specialized_results IF NOT result.converged]
+
+Phase 5: User Checkpoint（增强版）
+  展示给用户:
+  - 通用审计: 评级 + 评分趋势 + 亮点 + 待解决
+  - 专项审计: 每个 Skill 的触发情况 + 评级 + 关键发现（如有）
+  - 专项未收敛的 Skill 列表（如有）
+  用户选择:（同原 Phase 5）
   6. 展示给用户:
      - 审计评级 + 评分趋势
      - 亮点列表（已解决的重要问题）
@@ -474,3 +523,88 @@ Step 4: 结果处理（同规则11）
 - **跨文件上下文**：Critic 审计时传入 `worldbuilding_files = [目标文件] + [关联世界观文件]`，确保能做跨文件验证（如实力等级与世界天花板一致性）
 - **race_name 聚焦**：当目标文件包含多个种族/势力时，通过 race_name 参数聚焦审计范围
 - **Planner 全量上下文**：修复时传入 `existing_worldbuilding`（全部世界观文件），避免修复引入跨文件矛盾
+
+---
+
+## 规则14: 力量/修炼体系专项审计流程
+
+```
+条件: 用户请求审计/创建力量或修炼体系，或通用审计 B1（力量体系独特性）升级为 critical
+
+Skill 规范: workspace-critic/skills/power-system-review/SKILL.md
+维度规范: workspace-critic/skills/power-system-review/reference/dimensions.md
+准出规则: workspace-critic/skills/power-system-review/reference/convergence-criteria.md
+
+Step 1: 目标文件检测
+  IF user_request.target_file:
+    target_file = user_request.target_file
+  ELIF user_request.system_name:
+    target_file = search(project_path + "/outline/", user_request.system_name)
+  ELSE:
+    target_file = glob_first(project_path + "/outline/世界观设定-*修炼*.md")
+              || glob_first(project_path + "/outline/世界观设定-*力量*.md")
+              || glob_first(project_path + "/outline/世界观设定-*功法*.md")
+              || glob_first(project_path + "/outline/世界观设定-*共鸣*.md")
+              || glob_first(project_path + "/outline/世界观设定-*魔法*.md")
+              || glob_first(project_path + "/outline/世界观设定-*能力*.md")
+              || glob_first(project_path + "/outline/世界观设定-*灵力*.md")
+  IF target_file → modify 模式
+  IF not found → create 模式
+
+Step 2 (create 模式): 生成初始力量/修炼体系设定
+  sessions_spawn("planner", mode:"power_system_draft", {
+    project: novels/{项目名},
+    genre: project.json.genre,
+    system_name: user_request.system_name,
+    existing_worldbuilding: [outline/世界观设定*.md excluding target],
+    user_preferences: project.json.worldbuilding_preferences
+  })
+
+Step 3: 审计-修复循环（最多4轮）
+  related_files = glob(project_path + "/outline/世界观设定*.md").exclude(target_file)
+  round = 1
+
+  WHILE round <= 4 AND NOT converged:
+    // 3a: 审计
+    audit_mode = (round == 1) ? "comprehensive" : "focused"
+    audit_report = sessions_spawn("critic", {
+      worldbuilding_files: [target_file] + related_files,
+      audit_mode: audit_mode,
+      skill_context: "power-system-review",
+      dimension_spec: "workspace-critic/skills/power-system-review/reference/dimensions.md",
+      convergence_spec: "workspace-critic/skills/power-system-review/reference/convergence-criteria.md",
+      previous_report: (round > 1) ? last_report : null,
+      system_name: user_request.system_name,
+      project_preferences: project.json.worldbuilding_preferences
+    })
+
+    // 3b: 收敛检查
+    converged = (
+      critical_count == 0
+      AND warning_count <= 2
+      AND average_score >= 7.0
+      AND min_dimension_score >= 4
+    )
+    IF converged: BREAK
+
+    // 3c: 修复（传入全部世界观文件作为上下文）
+    fix_result = sessions_spawn("planner", {
+      mode: "worldbuilding_fix",
+      audit_report: audit_report,
+      target_scope: "power_system",
+      system_name: user_request.system_name,
+      existing_worldbuilding: glob(project_path + "/outline/世界观设定*.md")
+    })
+
+    last_report = audit_report
+    round += 1
+
+Step 4: 结果处理（同规则11）
+```
+
+### 力量体系审计的特殊设计
+
+- **高度耦合性**：力量体系与社会结构（阶层）、资源体系（稀缺资源）、种族势力（实力天花板）深度耦合。Critic 审计时传入关联世界观文件确保跨文件验证
+- **灵活文件检测**：不绑定特定文件名，支持"修炼""力量""功法""共鸣""魔法""能力""灵力"等多种命名
+- **system_name 聚焦**：当目标文件包含多个体系时，通过 system_name 参数聚焦审计范围
+- **Planner 全量上下文**：力量体系修改最易引发连锁反应，修复时必须传入全部世界观文件

@@ -44,3 +44,8 @@ Critic 仅通过 `sessions_spawn` 异步调用，不需要多轮交互。
 - **路径**: `skills/race-faction-review/SKILL.md`
 - **说明**: 种族/势力设定专项审计-修复循环。8 维度深度审计（RF1-RF8），支持 create/modify 双模式，最多 4 轮循环。**通用性**：适用于任何小说类型中的种族、异族、势力、组织等设定。**特点**：灵活的文件检测机制（不绑定特定文件名），审计时传入关联世界观文件确保跨文件验证，支持 race_name 参数聚焦多种族文件中的特定目标。
 - **注意**: 本技能的 8 维度审计体系独立于 TOOLS.md 中的通用 15 维度，仅在种族/势力专项审计时激活。维度规范和准出标准详见 `skills/race-faction-review/reference/`。
+
+### power-system-review
+- **路径**: `skills/power-system-review/SKILL.md`
+- **说明**: 力量/修炼体系专项审计-修复循环。8 维度深度审计（PS1-PS8），支持 create/modify 双模式，最多 4 轮循环。**通用性**：适用于修仙、奇幻魔法、末世觉醒、都市异能、科幻超能力等所有力量体系设定。**特点**：灵活的文件检测机制，审计时传入关联世界观文件确保跨文件验证（力量体系与社会结构/资源/种族高度耦合），支持 system_name 参数聚焦。
+- **注意**: 本技能的 8 维度审计体系独立于 TOOLS.md 中的通用 15 维度，仅在力量体系专项审计时激活。维度规范和准出标准详见 `skills/power-system-review/reference/`。
