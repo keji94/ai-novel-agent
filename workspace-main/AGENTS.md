@@ -391,3 +391,86 @@ Step 4: 结果处理（同规则11）
 - 跨文件联动：资源体系修复常需同步更新社会结构、聚集地格局等文件（RS8 维度）
 - create 模式需传入 cross_file_refs 参数，planner 据此进行交叉数据检查
 - 修复说明中必须列出所有跨文件变更
+
+---
+
+## 规则13: 种族/势力专项审计流程
+
+```
+条件: 用户请求审计/创建某个种族或势力设定，或通用审计 B3（敌人行为逻辑）升级为 critical
+
+Skill 规范: workspace-critic/skills/race-faction-review/SKILL.md
+维度规范: workspace-critic/skills/race-faction-review/reference/dimensions.md
+准出规则: workspace-critic/skills/race-faction-review/reference/convergence-criteria.md
+
+Step 1: 目标文件检测
+  IF user_request.target_file:
+    target_file = user_request.target_file
+  ELIF user_request.race_name:
+    target_file = search(project_path + "/outline/", user_request.race_name)
+  ELSE:
+    target_file = glob_first(project_path + "/outline/世界观设定-*族*.md")
+              || glob_first(project_path + "/outline/世界观设定-*势力*.md")
+              || glob_first(project_path + "/outline/世界观设定-*敌*.md")
+              || glob_first(project_path + "/outline/世界观设定-*种族*.md")
+  IF target_file → modify 模式
+  IF not found → create 模式
+
+Step 2 (create 模式): 生成初始种族/势力设定
+  sessions_spawn("planner", mode:"race_faction_draft", {
+    project: novels/{项目名},
+    genre: project.json.genre,
+    race_name: user_request.race_name,
+    existing_worldbuilding: [outline/世界观设定*.md excluding target],
+    user_preferences: project.json.worldbuilding_preferences
+  })
+
+Step 3: 审计-修复循环（最多4轮）
+  related_files = glob(project_path + "/outline/世界观设定*.md").exclude(target_file)
+  round = 1
+
+  WHILE round <= 4 AND NOT converged:
+    // 3a: 审计
+    audit_mode = (round == 1) ? "comprehensive" : "focused"
+    audit_report = sessions_spawn("critic", {
+      worldbuilding_files: [target_file] + related_files,
+      audit_mode: audit_mode,
+      skill_context: "race-faction-review",
+      dimension_spec: "workspace-critic/skills/race-faction-review/reference/dimensions.md",
+      convergence_spec: "workspace-critic/skills/race-faction-review/reference/convergence-criteria.md",
+      previous_report: (round > 1) ? last_report : null,
+      race_name: user_request.race_name,
+      project_preferences: project.json.worldbuilding_preferences
+    })
+
+    // 3b: 收敛检查
+    converged = (
+      critical_count == 0
+      AND warning_count <= 2
+      AND average_score >= 7.0
+      AND min_dimension_score >= 4
+    )
+
+    IF converged: BREAK
+
+    // 3c: 修复（传入全部世界观文件作为上下文）
+    fix_result = sessions_spawn("planner", {
+      mode: "worldbuilding_fix",
+      audit_report: audit_report,
+      target_scope: "race_faction",
+      race_name: user_request.race_name,
+      existing_worldbuilding: glob(project_path + "/outline/世界观设定*.md")
+    })
+
+    last_report = audit_report
+    round += 1
+
+Step 4: 结果处理（同规则11）
+```
+
+### 种族/势力审计的特殊设计
+
+- **灵活文件检测**：不绑定特定文件名，通过 glob + 用户指定自动匹配。支持"异族""势力""种族""敌人"等多种命名
+- **跨文件上下文**：Critic 审计时传入 `worldbuilding_files = [目标文件] + [关联世界观文件]`，确保能做跨文件验证（如实力等级与世界天花板一致性）
+- **race_name 聚焦**：当目标文件包含多个种族/势力时，通过 race_name 参数聚焦审计范围
+- **Planner 全量上下文**：修复时传入 `existing_worldbuilding`（全部世界观文件），避免修复引入跨文件矛盾
