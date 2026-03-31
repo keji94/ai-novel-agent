@@ -354,7 +354,205 @@ def check_ai_tells(chapter_content):
     return issues
 ```
 
-## 维度 24: 支线停滞
+---
+
+## 维度 34: 平台通用合规
+
+**检查项**:
+- 低俗色情（含擦边描写）
+- 暴力血腥（过度渲染）
+- 封建迷信、时政敏感
+- 民族歧视、宗教敏感
+
+```python
+def check_platform_general_compliance(chapter_content, sensitive_word_db):
+    issues = []
+    
+    # 敏感词扫描（含谐音/变体）
+    for match in sensitive_word_db.scan(chapter_content):
+        issues.append({
+            "dimension": 34,
+            "severity": "critical",
+            "location": match.position,
+            "description": f"包含敏感内容：「{match.word}」",
+            "suggestion": f"建议替换为「{match.alternative}」"
+        })
+    
+    # 擦边内容检测
+    erotic_patterns = load_patterns("erotic_boundary")
+    for match in erotic_patterns.scan(chapter_content):
+        issues.append({
+            "dimension": 34,
+            "severity": "critical",
+            "location": match.position,
+            "description": f"疑似擦边描写",
+            "suggestion": "建议删减或改写为含蓄表达"
+        })
+    
+    return issues
+```
+
+## 维度 35-37: 平台专属合规
+
+**检查项**:
+- 番茄(35): 标题党、虚假宣传、诱导互动、擦边人设
+- 起点(36): 版权问题、同质化、违规导流、分类规范
+- 纵横(37): 拖沓、无核心看点、违规广告
+
+```python
+def check_platform_specific(chapter_content, target_platform, chapter_n):
+    issues = []
+    
+    platform_rules = {
+        "tomato": {
+            "dimension": 35,
+            "checks": [
+                ("标题党", r"(震惊|看完哭了|绝了|必看|不看后悔)", "critical"),
+                ("诱导互动", r"(求票|求收藏|不更了|评论过\d+)", "warning"),
+                ("擦边人设", check_erotic_character_design, "critical"),
+            ]
+        },
+        "qidian": {
+            "dimension": 36,
+            "checks": [
+                ("版权风险", check_plagiarism_risk, "critical"),
+                ("分类规范", check_category_compliance, "warning"),
+                ("违规导流", r"(加群\d+|微信|公众号|扫码)", "critical"),
+            ]
+        },
+        "zongheng": {
+            "dimension": 37,
+            "checks": [
+                ("违规广告", check_ad_placement, "critical"),
+                ("核心看点", check_core_hook, "warning"),
+            ]
+        }
+    }
+    
+    if target_platform in platform_rules:
+        rules = platform_rules[target_platform]
+        for name, check_fn, severity in rules["checks"]:
+            for match in check_fn(chapter_content):
+                issues.append({
+                    "dimension": rules["dimension"],
+                    "severity": severity,
+                    "location": match.get("position", "全文"),
+                    "description": f"[{target_platform}] {name}：{match['detail']}",
+                    "suggestion": match.get("suggestion", "建议修改")
+                })
+    
+    return issues
+```
+
+## 维度 38: 章节字数规范
+
+**检查项**:
+- 番茄1500-3000字/章
+- 起点2000-5000字/章
+- 纵横2000-4000字/章
+
+```python
+CHAPTER_WORD_LIMITS = {
+    "tomato": (1500, 3000),
+    "qidian": (2000, 5000),
+    "zongheng": (2000, 4000),
+    "default": (1500, 5000),
+}
+
+def check_chapter_word_count(chapter_content, target_platform, chapter_n):
+    word_count = count_words(chapter_content)
+    limits = CHAPTER_WORD_LIMITS.get(target_platform, CHAPTER_WORD_LIMITS["default"])
+    issues = []
+    
+    if word_count < limits[0]:
+        issues.append({
+            "dimension": 38,
+            "severity": "warning",
+            "description": f"第{chapter_n}章字数{word_count}，低于{target_platform}下限{limits[0]}字",
+            "suggestion": f"建议补充至{limits[0]}-{limits[1]}字区间"
+        })
+    elif word_count > limits[1]:
+        issues.append({
+            "dimension": 38,
+            "severity": "warning",
+            "description": f"第{chapter_n}章字数{word_count}，超过{target_platform}上限{limits[1]}字",
+            "suggestion": f"建议拆分为两章或精简至{limits[0]}-{limits[1]}字区间"
+        })
+    
+    return issues
+```
+
+## 维度 39: 章尾钩子检查
+
+**检查项**:
+- 每章结尾是否有有效钩子
+- 钩子是否与主线/支线相关
+- 长篇是否设置阶段性钩子
+
+```python
+def check_chapter_hook(chapter_content, chapter_n, main_plot, total_chapters):
+    issues = []
+    ending = extract_chapter_ending(chapter_content, last_n_paragraphs=3)
+    
+    # 检查是否有钩子
+    hook_types = [
+        ("悬念钩子", r"(然而|但是|就在这时|忽然|没想到|谁知)"),
+        ("新信息钩子", r"(原来|真相|秘密|竟然|居然)"),
+        ("危机钩子", r"(危险|杀意|威胁|逼近|到来)"),
+        ("转折钩子", r"(不对|等等|等等|怎么会)"),
+    ]
+    
+    has_hook = False
+    for hook_name, pattern in hook_types:
+        if re.search(pattern, ending):
+            has_hook = True
+            break
+    
+    if not has_hook:
+        issues.append({
+            "dimension": 39,
+            "severity": "warning",
+            "description": f"第{chapter_n}章结尾缺少有效钩子",
+            "suggestion": "建议在章末加入悬念/新信息/危机/转折类钩子"
+        })
+    
+    return issues
+```
+
+## 维度 40: 差异化竞争力
+
+**检查项**:
+- 世界观是否独特（非套路化）
+- 金手指/核心设定是否新颖
+- 人设是否有辨识度
+
+```python
+def check_differentiation(project_settings, genre_tropes_db):
+    issues = []
+    
+    # 检查金手指独特性
+    golden_finger = project_settings.get("golden_finger", "")
+    similar_count = genre_tropes_db.count_similar(golden_finger, threshold=0.8)
+    if similar_count > 10:
+        issues.append({
+            "dimension": 40,
+            "severity": "warning",
+            "description": f"金手指「{golden_finger}」与{similar_count}部同类作品高度相似",
+            "suggestion": "建议增加差异化元素，如附加限制、独特使用方式或反转机制"
+        })
+    
+    # 检查世界观独特性
+    world_concept = project_settings.get("core_concept", "")
+    if genre_tropes_db.is_cliche(world_concept):
+        issues.append({
+            "dimension": 40,
+            "severity": "warning",
+            "description": "核心世界观设定偏套路化",
+            "suggestion": "建议在经典框架上加入至少一个反套路元素"
+        })
+    
+    return issues
+```
 
 **检查项**:
 - 活跃支线是否推进
