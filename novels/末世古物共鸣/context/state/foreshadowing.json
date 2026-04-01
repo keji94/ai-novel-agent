@@ -1,0 +1,69 @@
+{
+  "last_updated": "第3章-共鸣",
+  "foreshadowing": [
+    {
+      "id": "FS001",
+      "content": "左臂断口处在深度共鸣时传来短暂灼热感",
+      "planted_in": "第3章-共鸣",
+      "type": "能力伏笔",
+      "resolution": "幻肢共鸣——断臂处残存神经对古物共鸣能量的感应，后续共鸣深度提升时会反复出现",
+      "status": "planted"
+    },
+    {
+      "id": "FS002",
+      "content": "老孙头提到'你小子和你娘一个德行，犟'，且偶尔嘟囔'好人'、'不该死'、'长安城'",
+      "planted_in": "第2章-拾荒",
+      "type": "身世伏笔",
+      "resolution": "苏辰母亲是御城派共鸣者，发现异族封锁线情报后被猎杀，老孙头是其外勤队友",
+      "status": "planted"
+    },
+    {
+      "id": "FS003",
+      "content": "老孙头提到'老张'时握紧铁棍——暗示老孙头失去过重要的人",
+      "planted_in": "第2章-拾荒",
+      "type": "人物伏笔",
+      "resolution": "老孙头的过去——曾是公会成员，因违抗命令被除名，多位队友牺牲",
+      "status": "planted"
+    },
+    {
+      "id": "FS004",
+      "content": "古物星河中无数暗淡星辰——暗示大量未点亮的古物等待发现",
+      "planted_in": "第1章-醒来",
+      "type": "金手指伏笔",
+      "resolution": "星河持续点亮，星图等级从凡星到神星逐级解锁",
+      "status": "planted"
+    },
+    {
+      "id": "FS005",
+      "content": "造化炉在星河中央浮现但未被点亮——特殊的存在",
+      "planted_in": "第1章-醒来",
+      "type": "金手指伏笔",
+      "resolution": "造化炉是末世前六阶造化者的遗物，共鸣增幅器",
+      "status": "planted"
+    },
+    {
+      "id": "FS006",
+      "content": "老孙头的真实实力远超表面——一阶触物者只是伪装",
+      "planted_in": "第1章-醒来（暗示）",
+      "type": "人物伏笔",
+      "resolution": "第一卷中期老孙头之死时暴露真实实力",
+      "status": "planted"
+    },
+    {
+      "id": "FS007",
+      "content": "马三团伙结仇——后续可能报复或再次遭遇",
+      "planted_in": "第2章-拾荒",
+      "type": "剧情伏笔",
+      "resolution": "第5章初战时可能涉及拾荒者势力博弈",
+      "status": "planted"
+    },
+    {
+      "id": "FS008",
+      "content": "窝棚角落发现的陶印——鉴真之眼的首次验证对象",
+      "planted_in": "第3章-共鸣",
+      "type": "物品伏笔",
+      "resolution": "低级古物，可能作为交易筹码或后续共鸣练习对象",
+      "status": "planted"
+    }
+  ]
+}

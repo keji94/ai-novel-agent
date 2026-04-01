@@ -23,7 +23,7 @@
 
 ### Phase 2: 状态结算（增强版）
 - **输入**: Phase 1 章节正文 + 当前上下文文件
-- **输出**: 更新 11 个文件（7个状态 + 4个追踪）
+- **输出**: 更新 12 个文件（7个状态 + 4个追踪 + 设定释放）
 - **模型**: temperature 0.3, max_tokens 4096
 
 > 详细实现见 reference/two-phase-prompts.md Phase 2 部分
@@ -48,6 +48,11 @@ novels/{项目}/context/
 │   ├── characters.json                 ← 角色当前状态卡
 │   ├── foreshadowing.json              ← 伏笔债务表
 │   ├── world_state.json                ← 世界当前状态
+│   ├── settings_release.json           ← 设定释放索引（必加载）
+│   ├── settings/                       ← 设定详情（按需加载）
+│   │   ├── S001.md
+│   │   ├── S002.md
+│   │   └── ...
 │   └── timeline.json                   ← 时间线
 ├── summaries/                          ← 摘要文件（滚动窗口）
 │   ├── recent.md                       ← 最近10章详细摘要
@@ -76,6 +81,7 @@ novels/{项目}/context/
 9. scenes_index.md      - 场景索引
 10. particle_ledger.md  - 资源变化
 11. character_states.json - 角色矩阵
+12. settings_release.json + settings/S{id}.md - 设定释放状态更新
 ```
 
 ### 摘要滚动规则
@@ -91,9 +97,9 @@ novels/{项目}/context/
 1. 接收写作任务
    ↓
 2. Phase 0: 渐进式上下文组装
-   ├─ 第一层: characters.json + foreshadowing.json + recent.md
-   ├─ 第二层: 相关设定 + strand_alerts + readability_trend
-   └─ 第三层: scenes_index + relations（按需）
+   ├─ 第一层: characters.json + foreshadowing.json + recent.md + settings_release.json
+   ├─ 第二层: 相关设定 + settings/S{id}.md（本章涉及） + strand_alerts + readability_trend
+   └─ 第三层: scenes_index + relations + settings/S{id}.md（跨卷）
    ↓
 3. Phase 1: 创意写作 (temp 0.7)
    ├─ 基于组装上下文生成正文
@@ -107,6 +113,7 @@ novels/{项目}/context/
 5. Phase 2: 状态结算增强版 (temp 0.3)
    ├─ 更新 7个状态文件
    ├─ 更新 4个追踪文件
+   ├─ 更新设定释放状态（settings_release.json + settings/S{id}.md）
    ├─ 检查摘要滚动（>10章时压缩）
    └─ 一致性校验
    ↓
@@ -144,9 +151,9 @@ Phase 2 结算前自动快照，保留最近 5 章，支持一键回滚。
 ## 注意事项
 
 ### 必须做的事
-- **写作前**: 读取所有 7 个真相文件
-- **Phase 1**: 只输出正文，不输出其他内容
-- **Phase 2**: 必须更新所有变化的真相文件
+- **写作前**: 读取所有 7 个真相文件 + settings_release.json
+- **Phase 1**: 只输出正文，不输出其他内容，遵守设定门控规则
+- **Phase 2**: 必须更新所有变化的真相文件（含设定释放状态）
 - **写后**: 运行验证器，error 级别必须修复
 
 ### 禁止做的事

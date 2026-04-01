@@ -25,20 +25,23 @@
 > 详细规范见 reference/two-phase-prompts.md 的 Phase 0 部分
 
 ```
-第一层（必加载，~2K字）：
+第一层（必加载，~2.5K字）：
   - characters.json → 本章涉及角色的当前状态
   - foreshadowing.json → 待回收的伏笔（只读 pending）
   - recent.md → 最近10章详细摘要
+  - settings_release.json → 设定释放索引（所有设定的状态速查）
 
 第二层（条件加载，~3K字）：
   - 本章大纲涉及角色的详细设定
   - 相关伏笔的原文段落
+  - settings/S{id}.md → 本章大纲涉及的设定详情（按需）
   - strand_balance.json 的节奏告警
   - readability.json 的追读力趋势
 
 第三层（按需加载，~2K字）：
   - scenes_index.md 中的相关已描写场景（防重复）
   - character_relations.json（复杂人物关系时）
+  - settings/S{id}.md → 跨卷引用的旧设定详情
   - vol_X_summary.md（跨卷内容时）
 ```
 
@@ -46,15 +49,23 @@
 - 人设一致：第一层必加载角色状态卡
 - 伏笔不丢：第一层必加载 pending 伏笔表
 - 剧情连贯：第一层必加载最近10章摘要
-- 设定一致：第二层条件加载相关设定
+- 设定门控：第一层必加载设定释放索引，确保不提前泄露设定
+- 设定一致：第二层条件加载本章相关设定详情
 - 防止重复：第三层按需加载场景描写索引
 - 节奏平衡：第二层加载 Strand 告警，避免主线连续超5章
 - 追读力监控：第二层加载追读力趋势，避免连续下降
+
+**设定门控规则**
+- status=released: 可正常引用，按 knowledge_level 描写
+- status=partially_released: 可引用但角色未完全理解，描写必须体现困惑/不确定性
+- status=unreleased: 绝对不能出现在正文中，即使间接暗示也不行
+- 角色只能通过亲身经历（看、听、触碰）获得新认知，不能靠"突然想明白"
 
 **状态追踪意识**
 - 角色状态变化 → 更新 characters.json
 - 新增/回收伏笔 → 更新 foreshadowing.json
 - 世界状态变化 → 更新 world_state.json
+- 设定释放变化 → 更新 settings_release.json + settings/S{id}.md
 - 时间线推进 → 更新 timeline.json
 - 章节摘要 → 追加到 recent.md（滚动窗口）
 - 场景描写 → 追加到 scenes_index.md
@@ -183,9 +194,9 @@
     │
     ▼
 Phase 0: 渐进式上下文组装
-    ├─ 第一层: 角色状态 + 伏笔表 + 最近摘要
-    ├─ 第二层: 相关设定 + 节奏告警 + 追读力趋势
-    └─ 第三层: 防重复索引 + 关系图（按需）
+    ├─ 第一层: 角色状态 + 伏笔表 + 最近摘要 + 设定释放索引
+    ├─ 第二层: 相关设定详情 + 节奏告警 + 追读力趋势
+    └─ 第三层: 防重复索引 + 关系图 + 跨卷设定（按需）
     │
     ▼
 Phase 1: 创意写作 (temp 0.7)
@@ -201,6 +212,7 @@ Phase 1: 创意写作 (temp 0.7)
 Phase 2: 状态结算（增强版）(temp 0.3)
     ├─ 更新 7个状态文件
     ├─ 更新 4个追踪文件
+    ├─ 更新设定释放状态（settings_release.json + settings/S{id}.md）
     ├─ 检查摘要滚动窗口（>10章时压缩）
     └─ 一致性校验
     │

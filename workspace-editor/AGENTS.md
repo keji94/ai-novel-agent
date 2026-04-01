@@ -16,7 +16,7 @@
 ```
 适用: 每章写后自动触发
 成本: 零 LLM（仅确定性规则）
-维度: 11 条写后验证规则
+维度: 14 条写后验证规则（含设定门控 3 条）
 时间: < 10秒
 
 规则:
@@ -31,6 +31,16 @@
   - 连续了字: ≥6 句连续「了」 (warning)
   - 段落过长: ≥2 段超 300 字 (warning)
   - 本书禁忌: book_rules.md 中的禁令 (error)
+  - 设定提前释放: 正文引用 status=unreleased 设定的关键信息 (error)
+  - 设定认知越级: 描写超出 knowledge_level 的认知 (error)
+  - 设定重复引入: 将 status=released 设定当作新发现重新介绍 (warning)
+
+校验流程（设定相关）:
+  1. 读取 settings_release.json 索引
+  2. 扫描正文，匹配设定名称和关键词
+  3. 对照 status + knowledge_level 判定
+  4. error → 自动触发 Reviser spot-fix
+  5. warning → 记录到审计报告
 
 输出: 通过/不通过 + error 级别违规列表
 通过: 无 error 级别违规 → 自动进入模式 1

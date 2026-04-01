@@ -176,9 +176,14 @@ Phase 7: 衔接 Editor（已有）
 ```
 条件: 用户要撰写具体内容
 动作:
-  1. 检查上下文(大纲/设定)，不足先调 Planner 补充
+  1. 检查上下文(大纲/设定 + settings_release.json)，不足先调 Planner 补充
   2. sessions_spawn("writer", 撰写章节)
+     → Phase 0: 加载索引 + 本章相关设定详情
+     → Phase 1: 写作（遵守设定门控）
+     → Phase 2: 结算（更新设定状态）
   3. 自动触发 sessions_spawn("editor", 审核)
+     → Mode 0: 含设定校验 3 条规则
+     → IF 设定 error → Writer spot-fix → re-verify（max 2轮）
   4. 返回 Writer 结果 + Editor 审核报告
 ```
 
