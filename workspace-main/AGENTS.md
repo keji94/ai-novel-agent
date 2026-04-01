@@ -14,7 +14,7 @@
 | Analyst | 网文分析 | 作品分析、结构拆解、**多渠道技巧提取** |
 | Operator | 运营/分析 | 市场分析、读者研究、运营策略 |
 | Learner | 知识管理 | **技巧入库、知识检索、反馈处理** |
-| Critic | 世界观骇客 | **世界观设定审计、15维度质量检查、Fix Loop回归审计** |
+| Critic | 世界观骇客 | **世界观设定审计、18维度质量检查、Fix Loop回归审计** |
 
 ## 任务路由规则
 
@@ -49,6 +49,7 @@ Phase 3: 世界观审计（新增）
 
 Phase 4: Fix Loop（新增，最多3轮）
   4. round = 1
+  score_history = []
   5. WHILE round <= 3 AND NOT comprehensive_report.converged:
        a. sessions_spawn("planner", mode:"worldbuilding_fix", {
             audit_report: comprehensive_report / focused_report
@@ -59,9 +60,15 @@ Phase 4: Fix Loop（新增，最多3轮）
             previous_report: 上一轮报告,
             project_preferences: project.json.worldbuilding_preferences
           }) → focused_report
-       c. round += 1
+       c. score_history.append(focused_report.total_score)
+       d. round += 1
 
-  收敛条件: critical_count == 0 AND warning_count <= 3
+  > 收敛条件详见 workspace-critic/TOOLS.md（通用审计：critical_count == 0 AND warning_count <= 3）
+
+  停滞检测（第2轮起）:
+    IF round >= 2 AND score_history[-1] - score_history[-2] <= 1:
+      向用户展示趋势: "R1({score_history[0]}) → R2({score_history[1]})"
+      选项: (a) 定向修复（指定维度） (b) 接受当前版本
 
   未收敛处理:
     - 汇总所有 unresolved_issues
@@ -259,8 +266,9 @@ Step 6: 返回学习结果（提取X条，通过Y条，拒绝W条，更新分类
      ├── 部分修改 → sessions_spawn("writer", 定向修改)
      └── 审计修复 → sessions_spawn("reviser", 根据审计报告)
   3. 自动触发 sessions_spawn("editor", 审核)
-  4. 不通过 → 自动调 Reviser 修订 → 重复审核
+  4. 不通过 → 自动调 Reviser 修订 → 重复审核（最多3轮，超过后报告用户决策）
   5. 真相文件重算: sessions_spawn("writer", Phase 2 状态重算)
+     IF Phase 2 返回失败: 记录警告，下次 Writer 写作时自动触发完整重算
   6. 返回修改结果
 ```
 
@@ -306,405 +314,56 @@ Step 6: 返回学习结果（提取X条，通过Y条，拒绝W条，更新分类
 - **Agent调用失败**: 记录错误 → 尝试替代方案 → 返回部分结果
 - **超出能力范围**: 诚实说明限制 → 提供替代方案 → 建议调整需求
 
----
+### 场景化恢复策略
 
-## 规则11: 社会结构专项审计流程
-
-```
-条件: 用户请求审计/创建社会结构，或通用审计 C2 升级为 critical
-
-Skill 规范: workspace-critic/skills/social-structure-review/SKILL.md
-维度规范: workspace-critic/skills/social-structure-review/reference/dimensions.md
-准出规则: workspace-critic/skills/social-structure-review/reference/convergence-criteria.md
-
-Step 1: 模式判断
-  - exists("outline/世界观设定-社会结构.md") → modify 模式
-  - not exists → create 模式
-
-Step 2 (create 模式): 生成初始社会结构
-  sessions_spawn("planner", mode:"social_structure_draft", {
-    project: novels/{项目名},
-    genre: project.json.genre,
-    existing_worldbuilding: [outline/世界观设定*.md excluding 社会结构],
-    user_preferences: project.json.worldbuilding_preferences
-  })
-
-Step 3: 审计-修复循环（最多4轮）
-  round = 1
-  WHILE round <= 4 AND NOT converged:
-
-    // 3a: 审计
-    audit_mode = (round == 1) ? "comprehensive" : "focused"
-    audit_report = sessions_spawn("critic", {
-      worldbuilding_files: ["outline/世界观设定-社会结构.md"],
-      audit_mode: audit_mode,
-      skill_context: "social-structure-review",
-      dimension_spec: "workspace-critic/skills/social-structure-review/reference/dimensions.md",
-      convergence_spec: "workspace-critic/skills/social-structure-review/reference/convergence-criteria.md",
-      previous_report: (round > 1) ? last_report : null,
-      project_preferences: project.json.worldbuilding_preferences
-    })
-
-    // 3b: 检查收敛
-    converged = (
-      audit_report.critical_count == 0
-      AND audit_report.warning_count <= 2
-      AND (audit_report.total_score / 8.0) >= 7.0
-      AND min(dimension_scores) >= 4
-    )
-    IF converged: BREAK
-
-    // 3c: 趋势判断（第2轮起）
-    IF round >= 2 AND audit_report.trend.direction == "stagnant":
-      提示用户：修复进入平台期，可指定修复方向或接受当前版本
-
-    // 3d: 修复
-    sessions_spawn("planner", mode:"worldbuilding_fix", {
-      audit_report: audit_report,
-      target_scope: "social_structure"
-    })
-
-    last_report = audit_report
-    round += 1
-
-Step 4: 结果处理
-  IF converged:
-    展示: 最终评级 + 评分趋势 + 亮点保留确认
-  ELSE:
-    用户检查点:
-    - 评分趋势 (R1→R2→R3→R4)
-    - 已解决/待解决问题清单
-    - 最大阻塞项
-    用户选择:
-    ├── 批准当前版本 → 记录 accepted_flaws → 完成
-    ├── 定向修复 → 指定维度 → 再执行1轮 focused（不计入4轮）
-    └── 重新设计 → 回到 Step 2（将本次审计报告作为经验传入）
-```
-
-### 与通用 Fix Loop 的关系
-
-- 本 Skill 可独立运行，也可嵌入规则 1 Phase 3 前作为前置深度审计
-- 通用审计中 C2 评为 critical 时，建议升级触发本 Skill
-- 本 Skill 的审计结果不影响通用 15 维度审计的独立运行
+| 场景 | 检测方式 | 恢复策略 |
+|------|---------|---------|
+| Fix Loop 中途失败 | spawn 返回 error | 保留已完成的审计轮次，询问用户是否基于当前结果继续 |
+| Critic 报告格式错误 | 字段缺失/类型不匹配 | 要求 Critic 补充，或降级为文本报告 |
+| Writer Phase 2 部分失败 | 一致性校验未通过 | 标记失败的文件，下一章 Phase 0 时触发完整重算 |
+| spawn 超时 | timeout | 重试1次，仍失败则通知用户并保存当前进度 |
 
 ---
 
-## 规则12: 资源体系专项审计流程
+## 规则11-15: 专项审计流程（通用模板）
+
+每个专项审计 Skill 包含完整的审计-修复循环定义。Supervisor 按以下通用模板编排执行，具体参数见下表。
+
+> **Skill 文件是单一事实来源**：审计维度、收敛条件、输入/输出 Schema 均定义在各 `workspace-critic/skills/{skill_name}/SKILL.md` 中。
+
+### 通用编排流程
 
 ```
-条件: 用户请求审计/创建资源体系，或通用审计 C1 升级为 critical
-
-Skill 规范: workspace-critic/skills/resource-system-review/SKILL.md
-维度规范: workspace-critic/skills/resource-system-review/reference/dimensions.md
-准出规则: workspace-critic/skills/resource-system-review/reference/convergence-criteria.md
-
-Step 1: 模式判断
-  - exists("outline/世界观设定-资源体系.md") → modify 模式
-  - not exists → create 模式
-
-Step 2 (create 模式): 生成初始资源体系
-  sessions_spawn("planner", mode:"resource_system_draft", {
-    project: novels/{项目名},
-    genre: project.json.genre,
-    existing_worldbuilding: [outline/世界观设定*.md excluding 资源体系],
-    user_preferences: project.json.worldbuilding_preferences,
-    cross_file_refs: ["世界观设定-社会结构.md", "世界观设定-聚集地格局.md"]
-  })
-
+Step 1: 目标文件检测 → modify 模式（文件存在）/ create 模式（不存在）
+Step 2 (create): sessions_spawn("planner", mode:{planner_mode}, {...}) → 生成初稿
 Step 3: 审计-修复循环（最多4轮）
-  round = 1
   WHILE round <= 4 AND NOT converged:
-
-    audit_mode = (round == 1) ? "comprehensive" : "focused"
-    audit_report = sessions_spawn("critic", {
-      worldbuilding_files: ["outline/世界观设定-资源体系.md"],
-      audit_mode: audit_mode,
-      skill_context: "resource-system-review",
-      dimension_spec: "workspace-critic/skills/resource-system-review/reference/dimensions.md",
-      convergence_spec: "workspace-critic/skills/resource-system-review/reference/convergence-criteria.md",
-      previous_report: (round > 1) ? last_report : null,
-      project_preferences: project.json.worldbuilding_preferences
-    })
-
-    converged = evaluate_convergence(audit_report)
-    IF converged: BREAK
-
-    sessions_spawn("planner", mode:"worldbuilding_fix", {
-      audit_report: audit_report,
-      target_scope: "resource_system"
-    })
-
-    last_report = audit_report
-    round += 1
-
-Step 4: 结果处理（同规则11）
+    3a: sessions_spawn("critic", {skill_context, dimension_spec, convergence_spec, ...})
+    3b: 收敛检查（条件详见各 SKILL.md）→ converged?
+    3c: 趋势判断（round>=2 且 stagnant → 提示用户）
+    3d: sessions_spawn("planner", mode:"worldbuilding_fix", {target_scope, audit_report})
+Step 4: 结果处理 → converged: 展示评级+趋势 | not converged: 用户检查点
+  用户选择: 批准 | 定向修复（+1轮focused）| 重新设计（回Step 2）
 ```
 
-### 与社会结构审计的区别
+### Skill 参数表
 
-- 跨文件联动：资源体系修复常需同步更新社会结构、聚集地格局等文件（RS8 维度）
-- create 模式需传入 cross_file_refs 参数，planner 据此进行交叉数据检查
-- 修复说明中必须列出所有跨文件变更
+| 规则 | Skill | 触发维度 | Planner Mode | 目标文件 Glob | 特殊参数 |
+|------|-------|---------|-------------|-------------|---------|
+| 11 | social-structure-review | C2 | social_structure_draft | 世界观设定-社会结构*.md | - |
+| 12 | resource-system-review | C1 | resource_system_draft | 世界观设定-资源体系*.md | cross_file_refs |
+| 13 | race-faction-review | B3 | race_faction_draft | *族*\|*势力*\|*敌*\|*种族*.md | race_name |
+| 14 | power-system-review | B1 | power_system_draft | *修炼*\|*力量*\|*功法*\|*共鸣*\|*魔法*\|*能力*\|*灵力*.md | system_name |
+| 15 | protagonist-review | B2 | protagonist_draft | 主角设定\|主角*\|角色设定.md | protagonist_name, context_budget=30000 |
 
----
+### 各 Skill 特殊设计
 
-## 规则13: 种族/势力专项审计流程
+**规则11（社会结构）**：可独立运行或嵌入规则1 Phase 3 前置审计。审计结果不影响通用 18 维度审计。
 
-```
-条件: 用户请求审计/创建某个种族或势力设定，或通用审计 B3（敌人行为逻辑）升级为 critical
+**规则12（资源体系）**：RS8 维度需跨文件联动——修复后同步检查社会结构、聚集地格局等文件，修复说明必须列出跨文件变更。
 
-Skill 规范: workspace-critic/skills/race-faction-review/SKILL.md
-维度规范: workspace-critic/skills/race-faction-review/reference/dimensions.md
-准出规则: workspace-critic/skills/race-faction-review/reference/convergence-criteria.md
+**规则13（种族/势力）**：灵活文件检测（glob + 用户指定），Critic 审计传入目标文件+关联世界观做跨文件验证，修复传入全部世界观文件。
 
-Step 1: 目标文件检测
-  IF user_request.target_file:
-    target_file = user_request.target_file
-  ELIF user_request.race_name:
-    target_file = search(project_path + "/outline/", user_request.race_name)
-  ELSE:
-    target_file = glob_first(project_path + "/outline/世界观设定-*族*.md")
-              || glob_first(project_path + "/outline/世界观设定-*势力*.md")
-              || glob_first(project_path + "/outline/世界观设定-*敌*.md")
-              || glob_first(project_path + "/outline/世界观设定-*种族*.md")
-  IF target_file → modify 模式
-  IF not found → create 模式
+**规则14（力量/修炼）**：与社会结构/资源/种族深度耦合，修改最易引发连锁反应。修复时必须传入全部世界观文件。
 
-Step 2 (create 模式): 生成初始种族/势力设定
-  sessions_spawn("planner", mode:"race_faction_draft", {
-    project: novels/{项目名},
-    genre: project.json.genre,
-    race_name: user_request.race_name,
-    existing_worldbuilding: [outline/世界观设定*.md excluding target],
-    user_preferences: project.json.worldbuilding_preferences
-  })
-
-Step 3: 审计-修复循环（最多4轮）
-  related_files = glob(project_path + "/outline/世界观设定*.md").exclude(target_file)
-  round = 1
-
-  WHILE round <= 4 AND NOT converged:
-    // 3a: 审计
-    audit_mode = (round == 1) ? "comprehensive" : "focused"
-    audit_report = sessions_spawn("critic", {
-      worldbuilding_files: [target_file] + related_files,
-      audit_mode: audit_mode,
-      skill_context: "race-faction-review",
-      dimension_spec: "workspace-critic/skills/race-faction-review/reference/dimensions.md",
-      convergence_spec: "workspace-critic/skills/race-faction-review/reference/convergence-criteria.md",
-      previous_report: (round > 1) ? last_report : null,
-      race_name: user_request.race_name,
-      project_preferences: project.json.worldbuilding_preferences
-    })
-
-    // 3b: 收敛检查
-    converged = (
-      critical_count == 0
-      AND warning_count <= 2
-      AND average_score >= 7.0
-      AND min_dimension_score >= 4
-    )
-
-    IF converged: BREAK
-
-    // 3c: 修复（传入全部世界观文件作为上下文）
-    fix_result = sessions_spawn("planner", {
-      mode: "worldbuilding_fix",
-      audit_report: audit_report,
-      target_scope: "race_faction",
-      race_name: user_request.race_name,
-      existing_worldbuilding: glob(project_path + "/outline/世界观设定*.md")
-    })
-
-    last_report = audit_report
-    round += 1
-
-Step 4: 结果处理（同规则11）
-```
-
-### 种族/势力审计的特殊设计
-
-- **灵活文件检测**：不绑定特定文件名，通过 glob + 用户指定自动匹配。支持"异族""势力""种族""敌人"等多种命名
-- **跨文件上下文**：Critic 审计时传入 `worldbuilding_files = [目标文件] + [关联世界观文件]`，确保能做跨文件验证（如实力等级与世界天花板一致性）
-- **race_name 聚焦**：当目标文件包含多个种族/势力时，通过 race_name 参数聚焦审计范围
-- **Planner 全量上下文**：修复时传入 `existing_worldbuilding`（全部世界观文件），避免修复引入跨文件矛盾
-
----
-
-## 规则14: 力量/修炼体系专项审计流程
-
-```
-条件: 用户请求审计/创建力量或修炼体系，或通用审计 B1（力量体系独特性）升级为 critical
-
-Skill 规范: workspace-critic/skills/power-system-review/SKILL.md
-维度规范: workspace-critic/skills/power-system-review/reference/dimensions.md
-准出规则: workspace-critic/skills/power-system-review/reference/convergence-criteria.md
-
-Step 1: 目标文件检测
-  IF user_request.target_file:
-    target_file = user_request.target_file
-  ELIF user_request.system_name:
-    target_file = search(project_path + "/outline/", user_request.system_name)
-  ELSE:
-    target_file = glob_first(project_path + "/outline/世界观设定-*修炼*.md")
-              || glob_first(project_path + "/outline/世界观设定-*力量*.md")
-              || glob_first(project_path + "/outline/世界观设定-*功法*.md")
-              || glob_first(project_path + "/outline/世界观设定-*共鸣*.md")
-              || glob_first(project_path + "/outline/世界观设定-*魔法*.md")
-              || glob_first(project_path + "/outline/世界观设定-*能力*.md")
-              || glob_first(project_path + "/outline/世界观设定-*灵力*.md")
-  IF target_file → modify 模式
-  IF not found → create 模式
-
-Step 2 (create 模式): 生成初始力量/修炼体系设定
-  sessions_spawn("planner", mode:"power_system_draft", {
-    project: novels/{项目名},
-    genre: project.json.genre,
-    system_name: user_request.system_name,
-    existing_worldbuilding: [outline/世界观设定*.md excluding target],
-    user_preferences: project.json.worldbuilding_preferences
-  })
-
-Step 3: 审计-修复循环（最多4轮）
-  related_files = glob(project_path + "/outline/世界观设定*.md").exclude(target_file)
-  round = 1
-
-  WHILE round <= 4 AND NOT converged:
-    // 3a: 审计
-    audit_mode = (round == 1) ? "comprehensive" : "focused"
-    audit_report = sessions_spawn("critic", {
-      worldbuilding_files: [target_file] + related_files,
-      audit_mode: audit_mode,
-      skill_context: "power-system-review",
-      dimension_spec: "workspace-critic/skills/power-system-review/reference/dimensions.md",
-      convergence_spec: "workspace-critic/skills/power-system-review/reference/convergence-criteria.md",
-      previous_report: (round > 1) ? last_report : null,
-      system_name: user_request.system_name,
-      project_preferences: project.json.worldbuilding_preferences
-    })
-
-    // 3b: 收敛检查
-    converged = (
-      critical_count == 0
-      AND warning_count <= 2
-      AND average_score >= 7.0
-      AND min_dimension_score >= 4
-    )
-    IF converged: BREAK
-
-    // 3c: 修复（传入全部世界观文件作为上下文）
-    fix_result = sessions_spawn("planner", {
-      mode: "worldbuilding_fix",
-      audit_report: audit_report,
-      target_scope: "power_system",
-      system_name: user_request.system_name,
-      existing_worldbuilding: glob(project_path + "/outline/世界观设定*.md")
-    })
-
-    last_report = audit_report
-    round += 1
-
-Step 4: 结果处理（同规则11）
-```
-
-### 力量体系审计的特殊设计
-
-- **高度耦合性**：力量体系与社会结构（阶层）、资源体系（稀缺资源）、种族势力（实力天花板）深度耦合。Critic 审计时传入关联世界观文件确保跨文件验证
-- **灵活文件检测**：不绑定特定文件名，支持"修炼""力量""功法""共鸣""魔法""能力""灵力"等多种命名
-- **system_name 聚焦**：当目标文件包含多个体系时，通过 system_name 参数聚焦审计范围
-- **Planner 全量上下文**：力量体系修改最易引发连锁反应，修复时必须传入全部世界观文件
-
----
-
-## 规则15: 主角设定专项审计流程
-
-```
-条件: 用户请求审计/创建主角设定，或通用审计 B2（金手指合理性）升级为 critical
-
-Skill 规范: workspace-critic/skills/protagonist-review/SKILL.md
-维度规范: workspace-critic/skills/protagonist-review/reference/dimensions.md
-准出规则: workspace-critic/skills/protagonist-review/reference/convergence-criteria.md
-
-Step 1: 目标文件检测
-  IF user_request.target_file:
-    target_file = user_request.target_file
-  ELIF user_request.protagonist_name:
-    target_file = search(project_path + "/outline/", user_request.protagonist_name)
-  ELSE:
-    target_file = glob_first(project_path + "/outline/主角设定.md")
-              || glob_first(project_path + "/outline/主角*.md")
-              || glob_first(project_path + "/outline/角色设定.md")
-  IF target_file → modify 模式
-  IF not found → create 模式
-
-Step 2 (create 模式): 生成初始主角设定
-  other_worldbuilding = glob(project_path + "/outline/世界观设定*.md")
-
-  sessions_spawn("planner", mode:"protagonist_draft", {
-    project: novels/{项目名},
-    genre: project.json.genre,
-    protagonist_name: user_request.protagonist_name,
-    existing_worldbuilding: other_worldbuilding,
-    user_preferences: project.json.worldbuilding_preferences
-  })
-
-Step 3: 审计-修复循环（最多4轮）
-  // 关联文件收集（受上下文预算控制）
-  related_files = collect_related_files({
-    required: glob(project_path + "/outline/世界观设定-*力量*.md | *修炼*.md | *共鸣*.md | *社会*.md | *势力*.md"),
-    suggested: glob(project_path + "/outline/总大纲.md | *资源*.md"),
-    budget: 30000  // token 上限
-  })
-
-  round = 1
-
-  WHILE round <= 4 AND NOT converged:
-    // 3a: 审计
-    audit_mode = (round == 1) ? "comprehensive" : "focused"
-    audit_report = sessions_spawn("critic", {
-      target_files: [target_file],
-      related_files: related_files,
-      audit_mode: audit_mode,
-      skill_context: "protagonist-review",
-      dimension_spec: "workspace-critic/skills/protagonist-review/reference/dimensions.md",
-      convergence_spec: "workspace-critic/skills/protagonist-review/reference/convergence-criteria.md",
-      previous_report: (round > 1) ? last_report : null,
-      protagonist_name: user_request.protagonist_name,
-      project_preferences: project.json.worldbuilding_preferences
-    })
-
-    // 3b: 收敛检查
-    converged = (
-      critical_count == 0
-      AND warning_count <= 2
-      AND average_score >= 7.0
-      AND min_dimension_score >= 4
-    )
-    IF converged: BREAK
-
-    // 3c: 趋势判断
-    IF round >= 2 AND audit_report.trend.direction == "stagnant":
-      present_stagnation_warning(audit_report)
-
-    // 3d: 修复（传入全部世界观文件）
-    fix_result = sessions_spawn("planner", {
-      mode: "worldbuilding_fix",
-      audit_report: audit_report,
-      target_scope: "protagonist",
-      protagonist_name: user_request.protagonist_name,
-      existing_worldbuilding: glob(project_path + "/outline/世界观设定*.md")
-    })
-
-    last_report = audit_report
-    round += 1
-
-Step 4: 结果处理（同规则11）
-```
-
-### 主角设定审计的特殊设计
-
-- **跨文件验证**：主角的金手指、社会定位、成长上限必须与力量体系（等级天花板）、社会结构（阶层流动）、种族势力（血统限制）交叉验证
-- **上下文预算控制**：主角审计涉及多文件交叉验证，但全部传入会超出上下文限制。采用分级策略：必传力量体系+社会结构（影响最大），建议传大纲+资源体系（锦上添花），总预算 ≤ 30000 token
-- **金手指数量审计**：PC2 维度专门审计金手指数量和平衡性，防止"全方位无死角"的主角设计
-- **弱点真实性检查**：PC3 维度检查每个"弱点"是否有即时解决方案——有解决方案的弱点不是真弱点
-- **与通用 B2 的升级关系**：通用审计 B2（金手指合理性）评为 critical 时自动升级为本专项审计
+**规则15（主角设定）**：关联文件受 30000 token 预算控制（必传力量体系+社会结构，建议传大纲+资源体系）。PC2 审计金手指数量，PC3 检查弱点真实性。

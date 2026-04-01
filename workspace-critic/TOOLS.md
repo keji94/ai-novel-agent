@@ -1,3 +1,12 @@
+<!--
+维护约定：修改维度数量/编号后，必须同步更新以下文件：
+  - SOUL.md（维度数引用：comprehensive_audit 描述 + 工作流程图）
+  - skills/*/SKILL.md（通用审计维度引用：概述、触发条件、集成说明）
+  - skills/*/reference/convergence-criteria.md（"与通用审计的关系"对比表）
+  - skills/*/reference/dimensions.md（"独立于通用 N 维度体系"说明文字）
+  - workspace-main/AGENTS.md（Agent列表中的维度数描述）
+-->
+
 # Critic 工具手册 — 18维度世界观审计体系
 
 ## 审计维度总览
