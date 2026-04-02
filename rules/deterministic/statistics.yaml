@@ -1,4 +1,4 @@
-# D016-D019: 统计特征规则
+# D016-D021: 统计特征规则
 
 - id: D016
   name: "TTR 词汇多样性"
@@ -51,3 +51,29 @@
   message: "被动句过多，建议增加主动句"
   applies_to: [all]
   source: detector
+
+- id: D020
+  name: "章节字数不足"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: statistical
+  metric: total_char_count
+  threshold: 2000
+  comparison: less_than
+  message: "章节字数不足2000字，长篇网文每章建议2000-3000字"
+  applies_to: [all]
+  source: checker_intrinsic
+
+- id: D021
+  name: "章节字数过多"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: statistical
+  metric: total_char_count
+  threshold: 3000
+  comparison: greater_than
+  message: "章节字数超过3000字，长篇网文每章建议2000-3000字"
+  applies_to: [all]
+  source: checker_intrinsic

@@ -435,6 +435,8 @@ def check_statistical(rule: dict, full_text: str,
         value = _calc_paragraph_length_std(l2_units)
     elif metric == "active_voice_ratio":
         value = _calc_active_voice_ratio(l1_units)
+    elif metric == "total_char_count":
+        value = len(re.sub(r'\s', '', full_text))
 
     if value is None:
         return violations
