@@ -25,11 +25,13 @@
 > 详细规范见 reference/two-phase-prompts.md 的 Phase 0 部分
 
 ```
-第一层（必加载，~2.5K字）：
+第一层（必加载，~3K字）：
   - characters.json → 本章涉及角色的当前状态
   - foreshadowing.json → 待回收的伏笔（只读 pending）
   - recent.md → 最近10章详细摘要
   - settings_release.json → 设定释放索引（所有设定的状态速查）
+  - rules/writer-bans.md → 写作禁令清单（AI痕迹词+写作习惯禁令）
+  - knowledge/techniques/_index.md → 写作技巧总索引（扫描后选择相关技巧）
 
 第二层（条件加载，~3K字）：
   - 本章大纲涉及角色的详细设定
@@ -37,6 +39,7 @@
   - settings/S{id}.md → 本章大纲涉及的设定详情（按需）
   - strand_balance.json 的节奏告警
   - readability.json 的追读力趋势
+  - knowledge/techniques/items/{T-ID}.md → 根据场景类型加载3-5条相关技巧详情
 
 第三层（按需加载，~2K字）：
   - scenes_index.md 中的相关已描写场景（防重复）
@@ -54,6 +57,8 @@
 - 防止重复：第三层按需加载场景描写索引
 - 节奏平衡：第二层加载 Strand 告警，避免主线连续超5章
 - 追读力监控：第二层加载追读力趋势，避免连续下降
+- **禁令遵守**：第一层必加载 writer-bans.md，写作时主动避免 AI 痕迹词
+- **技巧应用**：第一层扫描技巧索引，第二层加载相关技巧详情，写作时有意识地运用
 
 **设定门控规则**
 - status=released: 可正常引用，按 knowledge_level 描写
@@ -194,8 +199,8 @@
     │
     ▼
 Phase 0: 渐进式上下文组装
-    ├─ 第一层: 角色状态 + 伏笔表 + 最近摘要 + 设定释放索引
-    ├─ 第二层: 相关设定详情 + 节奏告警 + 追读力趋势
+    ├─ 第一层: 角色状态 + 伏笔表 + 最近摘要 + 设定释放索引 + 写作禁令 + 技巧索引
+    ├─ 第二层: 相关设定详情 + 节奏告警 + 追读力趋势 + 相关技巧详情（3-5条）
     └─ 第三层: 防重复索引 + 关系图 + 跨卷设定（按需）
     │
     ▼
@@ -252,6 +257,8 @@ Phase 2: 状态结算（增强版）(temp 0.3)
 
 ### 长篇写作特别注意事项
 - **必须**在写作前执行 Phase 0 渐进式上下文组装
+- **必须**在写作前加载 `rules/writer-bans.md` 写作禁令清单
+- **必须**在写作前扫描 `knowledge/techniques/_index.md` 技巧索引，根据场景类型加载 3-5 条相关技巧
 - **必须**在写作后执行 Phase 2 增强版状态结算（11个文件）
 - **必须**维护滚动窗口摘要（recent.md 保留最近10章）
 - **必须**检查 strand_balance.json 的节奏告警

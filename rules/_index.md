@@ -9,6 +9,7 @@
 | 确定性规则 (Phase 1) | 21 | `deterministic/` | Checker（脚本执行）、Editor Mode 0、Detector、Writer |
 | LLM 规则 (Phase 2) | 19 | `llm/` | Checker（语义判断） |
 | AI 替换表 | 8 | `replacements/` | Reviser、Writer |
+| 写作禁令 | 1 | `writer-bans.md` | Writer（Phase 0 必加载） |
 | 学习规则 | 动态 | `learned/` | Checker（自管理） |
 
 ## 确定性规则 (deterministic/)
@@ -56,7 +57,7 @@ Phase 2 规则，逐段 LLM 语义判断。
 | **Editor** | deterministic/ (Mode 0), llm/ (交叉引用) | 快速验证 + 章节审计 |
 | **Detector** | deterministic/ (D001-D012, D016-D021) + replacements/ | AI 痕迹检测 |
 | **Reviser** | replacements/ai-traces.yaml | anti-detect 修复 |
-| **Writer** | deterministic/ (D001-D010) + replacements/ | 写作约束 + 后验证 |
+| **Writer** | deterministic/ (D001-D010) + replacements/ + writer-bans.md | Phase 0 必加载禁令 + 后验证 |
 | **Editor** (Mode 7) | learned/ (写入) + replacements/ (追加) | 定稿差异学习生成规则 |
 
 ## 维护指南
