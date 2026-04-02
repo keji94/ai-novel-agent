@@ -1,5 +1,13 @@
 # 学习规则索引
-# 从人工反馈自动生成的规则
+# 从人工反馈和定稿差异分析自动生成的规则
+#
+# 编号前缀:
+#   H = Human edit derived（定稿差异学习，Editor Mode 7 生成）
+#   规则 ID 格式: H001, H002, ...
+#
+# 规则来源:
+#   - 定稿差异分析 (Editor Mode 7): 用户人工修改章节后系统学习生成
+#   - Checker 自学习反馈: Checker 检查反馈驱动（待启用）
 
 total_learned_rules: 0
 active_rules: []

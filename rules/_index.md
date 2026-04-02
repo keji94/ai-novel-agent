@@ -42,7 +42,9 @@ Phase 2 规则，逐段 LLM 语义判断。
 
 ## 学习规则 (learned/)
 
-从 Checker 反馈自动生成，经用户审核后生效。详见 `learned/_index.yaml`。
+从 Checker 反馈或人工定稿差异分析自动生成，直接生效。详见 `learned/_index.yaml`。
+
+编号前缀：H = Human edit derived（定稿差异学习生成）
 
 生命周期：experimental → review_pending → active / deprecated
 
@@ -55,6 +57,7 @@ Phase 2 规则，逐段 LLM 语义判断。
 | **Detector** | deterministic/ (D001-D012, D016-D021) + replacements/ | AI 痕迹检测 |
 | **Reviser** | replacements/ai-traces.yaml | anti-detect 修复 |
 | **Writer** | deterministic/ (D001-D010) + replacements/ | 写作约束 + 后验证 |
+| **Editor** (Mode 7) | learned/ (写入) + replacements/ (追加) | 定稿差异学习生成规则 |
 
 ## 维护指南
 
@@ -67,3 +70,4 @@ Phase 2 规则，逐段 LLM 语义判断。
 
 - 2026-04-02: 初始创建，从 workspace-checker/rules/ 迁移，38 条规则
 - 2026-04-02: 新增 D020-D021 章节字数规则（2000-3000字）
+- 2026-04-02: 新增 H 前缀学习规则（定稿差异学习生成），Editor Mode 7 可写入 learned/

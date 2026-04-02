@@ -124,6 +124,47 @@ Learner 入库后执行全系统一致性检查（互重/分类/质量/引用完
 
 > 详细检查项和输出 JSON 格式见 `reference/knowledge-review-modes.md`
 
+### 模式 7: 定稿审核与差异学习
+
+```
+适用: 用户人工修改章节后的定稿（规则16触发）
+输入: chapter_path + draft_path (可选) + project
+输出: 审核报告 + 差异分析 + 候选规则
+
+流程:
+  Phase A: 内容审核
+    - 对人工修改后的终稿执行 Mode 0 快速验证
+    - 确保人工修改没有引入新的质量问题
+
+  Phase B: 差异分析 (仅当 draft_path 存在时)
+    1. 读取初稿和终稿
+    2. 逐段对比，标记所有变更:
+       - UNCHANGED: 完全相同
+       - MODIFIED: 有修改（重点分析）
+       - ADDED: 终稿新增段落
+       - DELETED: 终稿删除段落
+    3. 对每个 MODIFIED 变更分类:
+       - ai_trace: AI痕迹消除（AI套话→自然表达）
+       - style: 风格调整（句式、节奏、用词偏好）
+       - grammar: 语句优化（不通顺→通顺、冗余→精简）
+       - plot: 情节修改（内容/逻辑变化）
+       - setting: 设定修正
+       - other: 其他
+    4. 对同一类别的变更提取共性模式
+
+  Phase C: 规则生成（直接生效，无需确认）
+    - ai_trace 类 → 生成 replacement 规则 (追加到 ai-traces.yaml)
+    - style/grammar 类 → 生成 learned 规则 (写入 rules/learned/)
+    - plot/setting 类 → 不生成规则（内容选择，非写作技巧）
+
+  Phase D: 输出
+    - 定稿审核结果 (grade + issues)
+    - 差异分析报告 (每类变更数量 + 典型示例)
+    - 候选规则列表 (直接写入 rules/)
+```
+
+> 详细差异分析方法论和规则生成模板见 `reference/finalize-review.md`
+
 ## 审计维度概览
 
 | 类别 | 维度 | 检查内容 | 关键级别 |
