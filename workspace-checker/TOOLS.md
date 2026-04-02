@@ -1,8 +1,9 @@
-# Checker 工具手册 v2.0
+# Content Scanner 工具手册 v2.1
 
 > **核心能力**: 两阶段逐段检查引擎 + 规则系统 + 自学习
 > **共享协议**: `.openclaw/skills/content-scanner/`
 > **脚本目录**: `.openclaw/skills/content-scanner/scripts/`
+> **领域配置**: `context/domain-config.yaml`
 
 ---
 
@@ -26,17 +27,17 @@ python3 {baseDir}/split_text.py \
 ```bash
 python3 {baseDir}/run_deterministic.py \
   --input <文本文件路径> \
-  --rules-dir rules/deterministic/ \
+  --rules-dir <paths.deterministic_dir> \
   --config context/domain-config.yaml \
   --context-dir context/ \
-  --genre <xianxia|xuanhuan|urban>
+  [--genre <题材>]
 ```
 
-> 规则已迁移到项目级 `rules/deterministic/`，详见 `rules/_index.md`
+> 规则从 `paths.deterministic_dir` 目录自动加载，详见 `rules/_index.md`
 
 输出: JSON `{ violations[], summary }`
 
-覆盖 11 种规则类型（D001-D019），零 LLM 成本。
+覆盖所有确定性规则类型（type dispatcher 支持 11 种），零 LLM 成本。
 
 ### 3. update_context — 累积上下文更新
 
@@ -78,7 +79,7 @@ python3 {baseDir}/generate_report.py \
   --score /tmp/score.json \
   --split /tmp/split.json \
   --config context/domain-config.yaml \
-  --project <项目名> --content-id <章节标识>
+  --project <项目名> --content-id <内容标识>
 ```
 
 输出: 完整检查报告 JSON（符合 SKILL.md 定义的输出格式）
@@ -90,13 +91,13 @@ python3 {baseDir}/generate_report.py \
 ### 6. Phase 2 LLM 逐段检查
 
 Agent 自己做语义判断。每段一次 LLM 调用，检查：
-- 静态规则（rules/llm/，L001-L019）
-- 动态规则（知识库/技巧库匹配）
-- 学习规则（rules/learned/，status=active）
+- 静态规则（`paths.llm_dir` 下的 YAML 规则）
+- 动态规则（知识库匹配，如果 `paths.knowledge_base` 配置）
+- 学习规则（`paths.learned_dir` 中 status=active 的规则）
 
-### 7. load_relevant_techniques — 加载关联写作技巧
+### 7. load_relevant_techniques — 加载关联技巧
 
-根据章节场景标签从 knowledge/techniques/ 加载匹配技巧。
+根据场景标签从 `paths.knowledge_base` 加载匹配技巧。
 
 **转化规则**:
 
@@ -106,16 +107,18 @@ Agent 自己做语义判断。每段一次 LLM 调用，检查：
 | 注意事项 | 每条 → 负向检查规则 |
 | 应用场景 | 规则激活条件 |
 
-### 8. build_check_context — 构建小说累积上下文
+> 仅当 `paths.knowledge_base` 非 null 时生效。
 
-合并 truth files + 已检查段落摘要 → 构建当前段落的检查上下文。
+### 8. build_check_context — 构建累积上下文
+
+合并 context-sources.yaml 声明的上下文源 + 已检查段落摘要 → 构建当前段落的检查上下文。
 
 > 上下文源声明: `context/context-sources.yaml`
 
 ### 9. 自学习工具
 
 - process_human_feedback: 处理人工反馈
-- generate_candidate_rule: 从漏报提取候选规则 → rules/learned/
+- generate_candidate_rule: 从漏报提取候选规则 → `paths.learned_dir`
 
 ---
 

@@ -1,5 +1,6 @@
-# 小说领域上下文源声明
-# 声明 Checker 检查时需要加载的上下文文件
+# 上下文源声明
+# 声明 Scanner 检查时需要加载的上下文文件
+# 各宿主项目根据领域需求定制此文件
 
 sources:
   - id: recent_summary
@@ -24,13 +25,13 @@ sources:
     path: "context/state/settings_release.json"
     load: always
     max_tokens: 1500
-    description: "设定释放索引，用于 D013-D015 设定门控"
+    description: "设定释放索引（由规则 context_requirements 引用）"
 
   - id: timeline
     path: "context/state/timeline.json"
     load: always
     max_tokens: 1000
-    description: "当前时间线，用于 L002 时间线连贯性检查"
+    description: "当前时间线（由规则 context_requirements 引用）"
 
   - id: techniques
     path: "knowledge/techniques/_index.md"

@@ -8,9 +8,9 @@
 ### FB-{YYYY}-{NNN}
 
 - **日期**: YYYY-MM-DD
-- **章节**: 第X章-标题
+- **内容标识**: {content_id}
 - **反馈类型**: FALSE_POSITIVE | MISSED_ISSUE | FIX_APPROVED
-- **关联规则**: D001 / L003 / R-L001 / T-013
+- **关联规则**: {rule_id}
 - **人工标注**:
   - 原文: "..."
   - 标注说明: "..."
@@ -75,7 +75,7 @@ Checker 报告的问题被确认正确，修改建议被采纳。
 2. 更新规则的有效率
 3. 如果关联知识库技巧 T-{NNN}:
    - 输出 knowledge_feedback (effective=true)
-   - Supervisor 路由到 Learner process_feedback
+   - 输出 knowledge_feedback，由上游 Agent 路由到知识库管理 Agent
 
 ---
 
@@ -160,18 +160,18 @@ effectiveness:
 {
   "feedback_batch": [
     {
-      "chapter": "第5章",
+      "content_id": "内容标识",
       "type": "FALSE_POSITIVE",
-      "rule_id": "D004",
+      "rule_id": "{rule_id}",
       "original_text": "...",
       "note": "这里是合理使用，不是滥用"
     },
     {
-      "chapter": "第5章",
+      "content_id": "内容标识",
       "type": "MISSED_ISSUE",
       "paragraph_index": 12,
       "original_text": "...",
-      "issue_description": "这段对话语气和角色身份不符",
+      "issue_description": "问题描述",
       "severity_suggestion": "warning"
     }
   ]

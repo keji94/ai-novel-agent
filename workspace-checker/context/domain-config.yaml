@@ -1,18 +1,35 @@
-# 小说 Checker 领域配置
+# Content Scanner 领域配置
 # 覆盖 content-scanner 共享协议的默认参数
+# 各宿主项目根据领域需求定制此文件
 
 domain: novel
 description: "网文章节逐行扫描器配置"
 
+# 路径配置（相对于项目根目录）
+paths:
+  rules_dir: "rules"
+  deterministic_dir: "rules/deterministic"
+  llm_dir: "rules/llm"
+  learned_dir: "rules/learned"
+  replacements_dir: "rules/replacements"
+  knowledge_base: "knowledge/techniques"  # null 则跳过知识库
+  feedback_log: "feedback/_log.md"
+
+# 工作流配置
+workflow:
+  fix_agent: "reviser"          # 修复 Agent 名称
+  upstream_agents: []           # 上游触发 Agent 列表
+  content_label: "章节"         # 报告中使用的领域术语
+
 domain_config:
-  # 文本分片参数（使用默认值）
+  # 文本分片参数
   text_units:
     l1_separator: "。！？"
     l2_separator: "\\n"
     scan_unit: "l2"
     locate_unit: "l1"
 
-  # 上下文参数（使用默认值）
+  # 上下文参数
   context:
     recent_window: 3
     max_key_facts: 50
@@ -21,6 +38,8 @@ domain_config:
     # Phase 1→2 联动: 是否在 Phase 2 注入 Phase 1 提示
     enable_phase1_hints: true
     # 自适应上下文裁剪
+    # field_rule_map: 上下文字段与适用规则的映射，用于按需裁剪上下文
+    # 规则 ID 由宿主项目根据实际规则内容填写
     pruning:
       enabled: true
       field_rule_map:
@@ -35,7 +54,7 @@ domain_config:
       always_include:
         - recent_units
 
-  # 评分参数（使用默认值）
+  # 评分参数
   scoring:
     critical_weight: 10
     warning_weight: 3
@@ -46,12 +65,13 @@ domain_config:
       C: { min_score: 70, max_critical: 2 }
       D: { min_score: 0, max_critical: 999 }
     # 关联分组：同位置同组的违规只计最高 severity
+    # 组内规则 ID 由宿主项目根据实际规则填写
     correlation_groups:
       setting_integrity: [D013, D014, D015, L003, L004, L005]
       character_behavior: [D001, D002, D003, L001, L008, L016]
       readability: [D004, D005, D006, D007, D008, D009, D010, D011, D012, L011, L012, L013, L014]
 
-  # Fix Loop 参数（使用默认值）
+  # Fix Loop 参数
   fix_loop:
     max_rounds: 3
     convergence:
@@ -60,7 +80,7 @@ domain_config:
       score: 85
     stagnation_delta: 2
 
-  # 自学习参数（使用默认值）
+  # 自学习参数
   self_learning:
     upgrade_threshold:
       times_applied: 10
@@ -72,6 +92,3 @@ domain_config:
     review_pending:
       auto_approve_after: null  # 需人工审核
       max_pending: 20
-
-  # 修复 Agent
-  fix_agent: "reviser"
