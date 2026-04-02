@@ -16,24 +16,17 @@
 ```
 适用: 每章写后自动触发
 成本: 零 LLM（仅确定性规则）
-维度: 14 条写后验证规则（含设定门控 3 条）
 时间: < 10秒
 
-规则:
-  - 禁止句式: 「不是...而是...」(error)
-  - 禁止破折号: 「——」 (error)
-  - 转折词密度: 仿佛/忽然/竟然 ≤1次/3000字 (warning)
-  - 高疲劳词: 题材疲劳词 ≤1次/章 (warning)
-  - 元叙事: 编剧旁白式表述 (error)
-  - 报告术语: 分析框架术语 (warning)
-  - 作者说教: 显然/不言而喻 (warning)
-  - 集体反应: 「全场震惊」套话 (warning)
-  - 连续了字: ≥6 句连续「了」 (warning)
-  - 段落过长: ≥2 段超 300 字 (warning)
-  - 本书禁忌: book_rules.md 中的禁令 (error)
-  - 设定提前释放: 正文引用 status=unreleased 设定的关键信息 (error)
-  - 设定认知越级: 描写超出 knowledge_level 的认知 (error)
-  - 设定重复引入: 将 status=released 设定当作新发现重新介绍 (warning)
+规则来源: rules/deterministic/ (D001-D015)
+执行脚本: .openclaw/skills/content-scanner/scripts/run_deterministic.py
+规则详情: rules/_index.md
+
+规则概要:
+  - 禁止句式/破折号/元叙事 (D001-D003, critical)
+  - 转折词密度/疲劳词/报告术语/说教词/集体套话 (D004-D008, warning)
+  - 连续了字/段落过长 (D009-D010, warning)
+  - 设定门控: 提前释放/认知越级/重复引入 (D013-D015, critical/warning)
 
 校验流程（设定相关）:
   1. 读取 settings_release.json 索引
@@ -87,20 +80,18 @@
 
 ```
 适用: AI 痕迹深度分析
-维度: 维度 20-23 + 统计特征
+规则来源: rules/deterministic/ (D001-D012, D016-D019) + rules/replacements/ai-traces.yaml
+执行方式: 委托 Checker 或 run_deterministic.py 执行确定性检测
 时间: 约 5 分钟
 
 流程:
-  1. 读取章节内容
-  2. 维度 20: 段落等长检测
-  3. 维度 21: 套话密度检测
-  4. 维度 22: 公式化转折检测
-  5. 维度 23: 列表式结构检测
-  6. 统计特征: TTR / 句长标准差 / 段落标准差 / 主动句比例
-  7. 生成 AI 痕迹专项报告
+  1. 委托 Checker 执行针对性规则检测（或调用 run_deterministic.py）
+  2. 维度 20-23 审计: 段落等长/套话密度/公式化转折/列表式结构
+  3. 统计特征: TTR / 句长标准差 / 段落标准差 / 主动句比例 (D016-D019)
+  4. 生成 AI 痕迹专项报告
 
 输出: AI 痕迹得分 + 逐项分析 + 修改建议
-注意: 如需更全面检测，建议调用 Detector Agent
+注意: 如需更全面检测（含语义分析），建议调用 Detector Agent
 ```
 
 ### 模式 4: 番外/同人审计

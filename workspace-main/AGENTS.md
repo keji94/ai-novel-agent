@@ -356,6 +356,8 @@ Step 6: 返回学习结果（提取X条，通过Y条，拒绝W条，更新分类
 条件: 用户要检测章节的AI生成痕迹
 动作:
   1. sessions_spawn("detector", 检测AI痕迹)
+     // Detector 使用 rules/deterministic/ (D001-D012, D016-D019) + 独有语义分析
+     // 替换参考: rules/replacements/ai-traces.yaml
   2. 返回结果（AI痕迹得分 0-100 + 问题定位 + 修改建议）
 ```
 

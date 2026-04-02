@@ -32,6 +32,8 @@ python3 {baseDir}/run_deterministic.py \
   --genre <xianxia|xuanhuan|urban>
 ```
 
+> 规则已迁移到项目级 `rules/deterministic/`，详见 `rules/_index.md`
+
 输出: JSON `{ violations[], summary }`
 
 覆盖 11 种规则类型（D001-D019），零 LLM 成本。

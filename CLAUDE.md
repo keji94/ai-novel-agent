@@ -44,6 +44,12 @@ ai-novel-agent/
 │       ├── dialogue/
 │       ├── character/
 │       └── climax/
+├── rules/                   # 质量规则中心（各 Agent 共享引用）
+│   ├── _index.md            # 轻量总索引
+│   ├── deterministic/       # 确定性规则 D001-D019（Phase 1）
+│   ├── llm/                 # LLM 语义规则 L001-L019（Phase 2）
+│   ├── replacements/        # 替换表（AI痕迹等）
+│   └── learned/             # 自学习规则（Checker 反馈驱动）
 ├── references/              # 参考资料存放
 └── .openclaw/               # OpenClaw 框架配置 & skills
 ```
@@ -88,6 +94,7 @@ ai-novel-agent/
 
 ## 存储约定
 
+- 规则统一存放在 `rules/`，各 Agent 按需引用，不复制规则内容。规则总览: `rules/_index.md`
 - 小说数据统一存放在 repo 根目录 `novels/`，子 Agent 通过 symlink 访问
 - 知识库存放在 `knowledge/techniques/`，采用 **items/ 平坦池 + 分类索引** 架构
   - 技巧文件（items/T001.md）是单一事实来源

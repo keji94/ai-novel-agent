@@ -1,0 +1,41 @@
+# AI 痕迹替换表
+# 用途: Reviser anti-detect 模式 + Writer 写作约束 + Detector AI 痕迹检测参考
+# 权威来源: rules/replacements/ai-traces.yaml（其他 Agent 引用，不复制）
+
+replacements:
+  - ai_pattern: "不得不承认"
+    human_alternatives: ["说实话"]
+    severity: warning
+
+  - ai_pattern: "毋庸置疑"
+    human_alternatives: ["毫无疑问"]
+    severity: warning
+
+  - ai_pattern: "显而易见"
+    human_alternatives: ["一眼可见"]
+    severity: warning
+
+  - ai_pattern: "首先...其次...最后"
+    human_alternatives: ["直接叙述"]
+    severity: critical
+    note: "列表式结构，与 D011 关联"
+
+  - ai_pattern: "全场震惊"
+    human_alternatives: ["具体描写每个人的反应"]
+    severity: warning
+    note: "集体反应套话，与 D008 关联"
+
+  - ai_pattern: "仿佛"
+    human_alternatives: ["像", "如同（少用）"]
+    severity: warning
+    note: "高疲劳词，与 D004 关联"
+
+  - ai_pattern: "不禁"
+    human_alternatives: ["（删除，直接描写）", "没忍住", "下意识"]
+    severity: warning
+    note: "高疲劳词，与 D004 关联"
+
+  - ai_pattern: "竟然"
+    human_alternatives: ["（删除，或用其他表达）"]
+    severity: warning
+    note: "高疲劳词，与 D004 关联"
