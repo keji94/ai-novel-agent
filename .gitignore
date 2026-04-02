@@ -11,3 +11,9 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Skill 生成资源（图片等）
+images/
+
+# Skill 运行时缓存
+cache/
