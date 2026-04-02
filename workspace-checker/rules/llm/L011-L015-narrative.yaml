@@ -1,0 +1,76 @@
+# L011-L015: 叙事技巧（行级）
+
+- id: L011
+  name: "对话失真检测"
+  phase: 2
+  severity: warning
+  weight: 5
+  check_prompt: |
+    检查段落中的对话是否符合角色身份和情境。
+    重点关注：不同角色的说话方式过于雷同、
+    对话内容像"念台词"而非自然交流、
+    角色说话风格与已建立的说话方式矛盾、
+    对话中信息堆砌（角色说出他们已知的信息，仅仅是为了告诉读者）。
+  context_requirements:
+    - characters.json
+  applies_to: [dialogue]
+  source: editor_dim16
+
+- id: L012
+  name: "流水账检测"
+  phase: 2
+  severity: warning
+  weight: 3
+  check_prompt: |
+    检查段落是否过于平铺直叙，缺乏叙事技巧。
+    重点关注：连续多个段落都是"然后...接着...之后..."的流水叙述、
+    缺乏场景描写和情感渲染、事件之间缺乏节奏变化。
+  context_requirements:
+    - checked_lines_summary.emotional_arc
+  applies_to: [description, action]
+  source: editor_dim17
+
+- id: L013
+  name: "情感曲线突变"
+  phase: 2
+  severity: warning
+  weight: 3
+  check_prompt: |
+    检查段落的情感变化是否突兀。
+    重点关注：角色情绪突然从极端A跳到极端B（无过渡）、
+    紧张场景突然插入轻松描写（或反之）、
+    情感变化缺乏触发事件。
+  context_requirements:
+    - checked_lines_summary.emotional_arc
+  applies_to: [all]
+  source: checker_intrinsic
+
+- id: L014
+  name: "节奏单调检测"
+  phase: 2
+  severity: warning
+  weight: 3
+  check_prompt: |
+    检查段落是否与前后段落形成节奏单调的问题。
+    结合前3段内容判断：
+    连续多段都是对话、连续多段都是打斗、连续多段都是描写。
+    好的节奏应该是张弛有度、长短交替、动静结合。
+  context_requirements:
+    - checked_lines_summary.emotional_arc
+  applies_to: [all]
+  source: editor_dim7+dim26
+
+- id: L015
+  name: "知识库污染检测"
+  phase: 2
+  severity: warning
+  weight: 5
+  check_prompt: |
+    检查段落是否引入了与当前世界观无关的现代知识或概念。
+    重点关注：古风设定中出现现代用语、
+    修仙世界中出现科技概念、
+    叙述中混入了不属于故事世界的知识体系。
+  context_requirements:
+    - checked_lines_summary.key_facts
+  applies_to: [all]
+  source: editor_dim18

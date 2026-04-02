@@ -1,0 +1,52 @@
+# D013-D015: 设定门控规则
+
+- id: D013
+  name: "设定提前释放"
+  phase: 1
+  severity: critical
+  weight: 10
+  type: settings_gate
+  check: "正文引用 status=unreleased 设定的关键信息"
+  source_data: settings_release.json
+  logic: |
+    1. 读取 settings_release.json 获取全部设定状态
+    2. 筛选 status=unreleased 的设定
+    3. 对每个 unreleased 设定，检查正文中是否出现该设定名称或关键词
+    4. 匹配到 → critical 违规
+  message: "引用了未释放的设定信息，角色不应知道此内容"
+  applies_to: [all]
+  source: editor_mode0
+
+- id: D014
+  name: "设定认知越级"
+  phase: 1
+  severity: critical
+  weight: 10
+  type: settings_gate
+  check: "描写超出 knowledge_level 的认知"
+  source_data: settings_release.json
+  logic: |
+    1. 读取 settings_release.json 获取 released/partially_released 设定
+    2. 对每个设定检查 knowledge_level
+    3. 如果角色描写超出了 knowledge_level 允许的范围 → critical
+    例: knowledge_level="了解外观" 但描写了内部结构 → 越级
+  message: "角色对该设定的认知超出了已释放的级别"
+  applies_to: [all]
+  source: editor_mode0
+
+- id: D015
+  name: "设定重复引入"
+  phase: 1
+  severity: warning
+  weight: 3
+  type: settings_gate
+  check: "将 status=released 设定当作新发现重新介绍"
+  source_data: settings_release.json
+  logic: |
+    1. 读取 settings_release.json 获取 status=released 设定
+    2. 检查正文中是否有"初次发现"式的描写
+    信号词: "第一次见到", "从未见过", "竟然是...", 带惊讶语气的重新描述
+    3. 匹配到 → warning
+  message: "已释放设定不应作为新发现重新引入"
+  applies_to: [all]
+  source: editor_mode0

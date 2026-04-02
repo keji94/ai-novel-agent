@@ -1,0 +1,80 @@
+# L006-L010: 内容质量（行级）
+
+- id: L006
+  name: "信息越界检测"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中角色是否知道不该知道的信息。
+    对比当前角色的知识边界（通过前文经历和设定释放判断）。
+    重点关注：角色突然知道只有上帝视角才知道的信息、
+    角色知道其他角色的私密想法、角色知道尚未经历的事件结果。
+    角色只能通过个人经历（看见、听到、被告知）获取信息。
+  context_requirements:
+    - characters.json
+    - settings_release.json
+    - checked_lines_summary.information_revealed
+  applies_to: [all]
+  source: editor_dim9
+
+- id: L007
+  name: "利益链/动机检查"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中角色的行为是否有充分的动机支撑。
+    重点关注：角色做出重大决定但缺乏动机、
+    角色行为与其利益/目标矛盾、角色突然改变立场但缺乏原因。
+  context_requirements:
+    - characters.json
+    - checked_lines_summary.character_states
+  applies_to: [action, dialogue]
+  source: editor_dim11
+
+- id: L008
+  name: "配角降智检测"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中配角是否为了推动剧情而变得不合理的愚蠢。
+    重点关注：高等级角色被低等级角色轻易欺骗、
+    经验丰富的角色做出新手级错误、聪明的角色突然变笨。
+    例外：如果降智有合理原因（被蒙蔽、信息不全、另有隐情）则不算违规。
+  context_requirements:
+    - characters.json
+    - checked_lines_summary.key_facts
+  applies_to: [action, dialogue]
+  source: editor_dim13
+
+- id: L009
+  name: "视角一致性"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落的叙事视角是否一致。
+    重点关注：有限视角中突然出现角色不可能知道的信息、
+    视角在角色间不合理跳跃、第三人称叙述中出现第一人称心理描写。
+  context_requirements:
+    - checked_lines_summary.key_facts
+  applies_to: [all]
+  source: editor_dim19
+
+- id: L010
+  name: "伏笔连贯性"
+  phase: 2
+  severity: warning
+  weight: 5
+  check_prompt: |
+    检查段落中的伏笔引用是否与前文一致。
+    重点关注：引用的伏笔细节与原始埋设不一致、
+    回收伏笔的方式与之前暗示的方向矛盾、
+    已回收的伏笔又被当作未回收使用。
+  context_requirements:
+    - foreshadowing.json
+    - checked_lines_summary.key_facts
+  applies_to: [all]
+  source: editor_dim6

@@ -1,0 +1,62 @@
+# L016-L019: 上下文敏感规则
+
+- id: L016
+  name: "角色状态追踪"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中角色的物理状态是否与前文一致。
+    重点关注：角色位置突然变化（无移动描写）、
+    角色状态与上段矛盾（刚受伤突然完好、刚离开突然在场）、
+    角色物品/装备与已建立的不一致。
+  context_requirements:
+    - characters.json
+    - checked_lines_summary.character_states
+  applies_to: [action, description]
+  source: checker_intrinsic
+
+- id: L017
+  name: "场景连续性"
+  phase: 2
+  severity: warning
+  weight: 5
+  check_prompt: |
+    检查段落与前后段落的场景是否连贯。
+    重点关注：环境描写突然变化（无过渡）、
+    天气/光线/温度突变（无原因）、
+    场景中的物品/人物突然出现或消失。
+  context_requirements:
+    - checked_lines_summary.key_facts
+  applies_to: [description]
+  source: checker_intrinsic
+
+- id: L018
+  name: "指代消解检查"
+  phase: 2
+  severity: warning
+  weight: 3
+  check_prompt: |
+    检查段落中的代词指代是否明确。
+    重点关注：多个同性别角色在场时用"他/她"指代不清、
+    "这个/那个"等指代缺少明确先行词、
+    读者可能混淆谁在说话/行动。
+  context_requirements:
+    - checked_lines_summary.key_facts
+  applies_to: [all]
+  source: checker_intrinsic
+
+- id: L019
+  name: "段落间逻辑连贯"
+  phase: 2
+  severity: warning
+  weight: 5
+  check_prompt: |
+    检查当前段落与前一段落之间是否存在逻辑断裂。
+    重点关注：因果链断裂（结果出现但缺少原因）、
+    事件跳跃（中间缺少过渡步骤）、
+    论证/推理链不完整。
+  context_requirements:
+    - checked_lines_summary.key_facts
+  applies_to: [all]
+  source: checker_intrinsic

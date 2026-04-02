@@ -1,0 +1,91 @@
+# 小说领域上下文源声明
+# 声明 Checker 检查时需要加载的上下文文件
+
+sources:
+  - id: recent_summary
+    path: "context/summaries/recent.md"
+    load: always
+    max_tokens: 2000
+    description: "前5章摘要，用于构建 chapter_summary 上下文"
+
+  - id: characters
+    path: "context/state/characters.json"
+    load: always
+    max_tokens: 3000
+    description: "本章涉及角色设定和当前状态"
+
+  - id: foreshadowing
+    path: "context/state/foreshadowing.json"
+    load: always
+    max_tokens: 1500
+    description: "待回收伏笔列表"
+
+  - id: settings_release
+    path: "context/state/settings_release.json"
+    load: always
+    max_tokens: 1500
+    description: "设定释放索引，用于 D013-D015 设定门控"
+
+  - id: timeline
+    path: "context/state/timeline.json"
+    load: always
+    max_tokens: 1000
+    description: "当前时间线，用于 L002 时间线连贯性检查"
+
+  - id: techniques
+    path: "knowledge/techniques/_index.md"
+    load: on_demand
+    max_tokens: 2000
+    description: "写作技巧知识库索引，按场景标签匹配加载"
+
+# 上下文字段映射
+context_mapping:
+  static_fields:
+    chapter_summary:
+      source: recent_summary
+      extract: "直接加载全文"
+    truth_snapshot.characters:
+      source: characters
+    truth_snapshot.foreshadowing:
+      source: foreshadowing
+    truth_snapshot.settings_release:
+      source: settings_release
+    truth_snapshot.timeline:
+      source: timeline
+
+  cumulative_fields:
+    - name: key_facts
+      type: list
+      max_size: 50
+      update_strategy: append
+      sample_rate: 0
+      confidence:
+        track: true
+        tentative_threshold: 0.7
+        correction_strategy: override
+
+    - name: character_states
+      type: dict
+      max_size: null
+      update_strategy: merge
+      sample_rate: 0
+      confidence:
+        track: true
+        tentative_threshold: 0.6
+        correction_strategy: override
+
+    - name: information_revealed
+      type: list
+      max_size: 30
+      update_strategy: append
+      sample_rate: 0
+      confidence:
+        track: true
+        tentative_threshold: 0.7
+        correction_strategy: override
+
+    - name: emotional_arc
+      type: list
+      max_size: null
+      update_strategy: append
+      sample_rate: 3

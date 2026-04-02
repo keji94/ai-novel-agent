@@ -1,0 +1,53 @@
+# D016-D019: 统计特征规则
+
+- id: D016
+  name: "TTR 词汇多样性"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: statistical
+  metric: ttr
+  threshold: 0.05
+  comparison: less_than
+  message: "词汇多样性不足(TTR < 0.05)，建议丰富用词"
+  applies_to: [all]
+  source: detector
+
+- id: D017
+  name: "句长标准差过低"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: statistical
+  metric: sentence_length_std
+  threshold: 10
+  comparison: less_than
+  message: "句子长度过于均匀，建议长短句交替"
+  applies_to: [all]
+  source: detector
+
+- id: D018
+  name: "段落长度标准差过低"
+  phase: 1
+  severity: warning
+  weight: 3
+  type: statistical
+  metric: paragraph_length_std
+  threshold: 30
+  comparison: less_than
+  message: "段落长度过于均匀，建议段落长短搭配"
+  applies_to: [all]
+  source: detector
+
+- id: D019
+  name: "主动句比例过低"
+  phase: 1
+  severity: warning
+  weight: 3
+  type: statistical
+  metric: active_voice_ratio
+  threshold: 0.5
+  comparison: less_than
+  message: "被动句过多，建议增加主动句"
+  applies_to: [all]
+  source: detector

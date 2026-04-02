@@ -1,0 +1,55 @@
+# D009-D012: 段落和句子结构
+
+- id: D009
+  name: "连续了字"
+  phase: 1
+  severity: warning
+  weight: 3
+  type: consecutive
+  target_char: '了'
+  threshold: 6
+  unit: sentence
+  message: "连续≥6句含「了」，建议变化表达"
+  applies_to: [all]
+  source: editor_mode0+detector
+
+- id: D010
+  name: "段落过长"
+  phase: 1
+  severity: warning
+  weight: 2
+  type: length_check
+  threshold: 300
+  unit: char
+  min_violations: 2
+  message: "≥2段超过300字，建议拆分段落"
+  applies_to: [all]
+  source: editor_mode0+detector
+
+- id: D011
+  name: "列表式结构"
+  phase: 1
+  severity: critical
+  weight: 8
+  type: pattern_list
+  patterns:
+    - '第一[，。].*第二[，。].*第三'
+    - '首先[，。].*其次[，。].*最后'
+    - '其一[，。].*其二[，。].*其三'
+    - '一方面[，。].*另一方面'
+  message: "列表式结构，用自然叙述代替"
+  applies_to: [all]
+  source: detector
+
+- id: D012
+  name: "重复段落开头"
+  phase: 1
+  severity: warning
+  weight: 3
+  type: consecutive_pattern
+  check: "连续≥3个段落以相同方式开头（如同一个字、同一种句式、或同一人名开头）"
+  threshold: 3
+  unit: paragraph
+  message: "段落开头模式重复，建议变化开篇方式"
+  applies_to: [all]
+  source: checker_intrinsic

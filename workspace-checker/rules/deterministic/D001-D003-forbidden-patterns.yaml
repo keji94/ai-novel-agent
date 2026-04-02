@@ -1,0 +1,37 @@
+# D001-D003: 禁止句式和标点
+
+- id: D001
+  name: "禁止句式「不是...而是...」"
+  phase: 1
+  severity: critical
+  weight: 10
+  pattern: '不是[^。！？]{0,20}而是'
+  message: "禁止句式「不是...而是...」，改写为直接叙述"
+  applies_to: [all]
+  source: editor_mode0+detector
+
+- id: D002
+  name: "禁止破折号"
+  phase: 1
+  severity: critical
+  weight: 8
+  pattern: '——'
+  message: "禁止使用破折号「——」，改为逗号或句号断句"
+  applies_to: [all]
+  source: editor_mode0+detector
+
+- id: D003
+  name: "元叙事检测"
+  phase: 1
+  severity: critical
+  weight: 10
+  patterns:
+    - '作为[^，]{0,5}，'
+    - '要知道，'
+    - '不得不说，'
+    - '从某种意义上说'
+    - '换句话说'
+    - '总而言之'
+  message: "编剧旁白式表述，避免元叙事，直接叙述"
+  applies_to: [all]
+  source: editor_mode0+detector

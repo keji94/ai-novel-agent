@@ -1,0 +1,7 @@
+{
+  "ownerId": "shared",
+  "slug": "content-scanner",
+  "version": "1.0.0",
+  "description": "通用内容扫描协议 - 两阶段逐段扫描引擎（确定性快筛 + 逐段LLM深检 + 累积上下文 + 自学习 + Fix Loop）",
+  "created_at": 1743523200000
+}

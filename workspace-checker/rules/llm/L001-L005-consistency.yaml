@@ -1,0 +1,77 @@
+# L001-L005: 基础一致性（行级）
+
+- id: L001
+  name: "角色行为 OOC 检查"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中每个角色的行为是否符合其已建立的性格和当前状态。
+    对比角色设定中的性格特征、说话风格、行为模式。
+    重点关注：角色做出与其性格矛盾的行为、说出与其身份不符的话、
+    做出不合理的决策（无充分动机支撑）。
+  context_requirements:
+    - characters.json
+    - checked_lines_summary.character_states
+  applies_to: [action, dialogue]
+  source: editor_dim1
+
+- id: L002
+  name: "时间线连贯性"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中的时间表述是否与前文时间线一致。
+    重点关注：时间倒流（事件顺序错乱）、时间跨度不合理、
+    季节/天气/光线描写与当前时间矛盾。
+  context_requirements:
+    - timeline.json
+    - checked_lines_summary.key_facts
+  applies_to: [description, action]
+  source: editor_dim2
+
+- id: L003
+  name: "设定冲突检测"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落内容是否与已知世界观设定产生矛盾。
+    重点关注：力量体系规则被违反、社会结构设定被打破、
+    地理/环境描写与设定不符、种族/势力特征与设定冲突。
+  context_requirements:
+    - characters.json
+    - settings_release.json
+    - checked_lines_summary.key_facts
+  applies_to: [all]
+  source: editor_dim3
+
+- id: L004
+  name: "战力一致性"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中的战斗力描写是否与前文一致。
+    重点关注：角色战力突然暴涨或暴跌（无合理解释）、
+    战斗结果与实力对比矛盾、技能使用超出角色能力范围。
+  context_requirements:
+    - characters.json
+    - checked_lines_summary.character_states
+  applies_to: [action]
+  source: editor_dim4
+
+- id: L005
+  name: "数值一致性"
+  phase: 2
+  severity: critical
+  weight: 10
+  check_prompt: |
+    检查段落中的数值型描述是否前后一致。
+    重点关注：距离/速度/数量等数值与前文矛盾、
+    资源获得/消耗的计算是否正确、角色年龄/时间等关键数字是否一致。
+  context_requirements:
+    - checked_lines_summary.key_facts
+  applies_to: [all]
+  source: editor_dim5

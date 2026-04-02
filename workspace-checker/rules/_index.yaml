@@ -1,0 +1,43 @@
+# Checker 规则总索引
+# 轻量索引，始终加载（<1000 token）
+
+total_rules: 38
+phases:
+  deterministic: 19  # D001-D019, Phase 1 确定性快筛
+  llm: 19            # L001-L019, Phase 2 逐段 LLM 深检
+
+categories:
+  forbidden_pattern: [D001, D002, D003]
+  word_frequency: [D004, D005, D006, D007, D008]
+  structure: [D009, D010, D011, D012]
+  settings_gate: [D013, D014, D015]
+  statistics: [D016, D017, D018, D019]
+  consistency: [L001, L002, L003, L004, L005, L016]
+  quality: [L006, L007, L008, L009, L010]
+  narrative: [L011, L012, L013, L014, L015]
+  contextual: [L017, L018, L019]
+
+severity_distribution:
+  critical: [D001, D002, D003, D011, D013, D014, L001, L002, L003, L004, L005, L006, L007, L008, L009, L016]
+  warning: [D004, D005, D006, D007, D008, D009, D010, D012, D015, D016, D017, D018, D019, L010, L011, L012, L013, L014, L015, L017, L018, L019]
+
+# 知识库技巧动态加载（运行时从 knowledge/techniques/ 加载）
+# 格式: T-{NNN}，按需加载
+technique_rules: []  # 运行时填充
+
+# 学习规则（从反馈自动生成）
+learned_rules: []  # 运行时从 rules/learned/_index.yaml 加载
+
+# 规则文件映射
+file_map:
+  deterministic:
+    D001-D003: rules/deterministic/D001-D003-forbidden-patterns.yaml
+    D004-D008: rules/deterministic/D004-D008-word-frequency.yaml
+    D009-D012: rules/deterministic/D009-D012-structure.yaml
+    D013-D015: rules/deterministic/D013-D015-settings-gate.yaml
+    D016-D019: rules/deterministic/D016-D019-statistics.yaml
+  llm:
+    L001-L005: rules/llm/L001-L005-consistency.yaml
+    L006-L010: rules/llm/L006-L010-quality.yaml
+    L011-L015: rules/llm/L011-L015-narrative.yaml
+    L016-L019: rules/llm/L016-L019-contextual.yaml

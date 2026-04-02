@@ -1,0 +1,17 @@
+# 学习规则索引
+# 从人工反馈自动生成的规则
+
+total_learned_rules: 0
+active_rules: []
+experimental_rules: []
+review_pending_rules: []
+deprecated_rules: []
+
+# 生命周期规则:
+# experimental → (应用≥10次, 有效率≥50%) → review_pending
+# review_pending → (人工审核通过) → active
+# review_pending → (人工审核不通过) → deprecated
+# review_pending → (人工要求重新验证) → experimental
+# active → (false_positive_rate>30%) → review_needed
+# review_needed → (人工审核通过) → active
+# review_needed → (人工审核不通过) → deprecated

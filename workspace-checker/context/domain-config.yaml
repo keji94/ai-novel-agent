@@ -1,0 +1,77 @@
+# 小说 Checker 领域配置
+# 覆盖 content-scanner 共享协议的默认参数
+
+domain: novel
+description: "网文章节逐行扫描器配置"
+
+domain_config:
+  # 文本分片参数（使用默认值）
+  text_units:
+    l1_separator: "。！？"
+    l2_separator: "\\n"
+    scan_unit: "l2"
+    locate_unit: "l1"
+
+  # 上下文参数（使用默认值）
+  context:
+    recent_window: 3
+    max_key_facts: 50
+    max_information: 30
+    emotional_sample_rate: 3
+    # Phase 1→2 联动: 是否在 Phase 2 注入 Phase 1 提示
+    enable_phase1_hints: true
+    # 自适应上下文裁剪
+    pruning:
+      enabled: true
+      field_rule_map:
+        characters: [L001, L004, L008, L016]
+        character_states: [L001, L004, L016]
+        foreshadowing: [L010]
+        settings_release: [L003, D013, D014, D015]
+        timeline: [L002]
+        key_facts: [L002, L003, L005]
+        information_revealed: [L006]
+        emotional_arc: [L013, L014]
+      always_include:
+        - recent_units
+
+  # 评分参数（使用默认值）
+  scoring:
+    critical_weight: 10
+    warning_weight: 3
+    suggestion_weight: 1
+    grade_thresholds:
+      A: { min_score: 90, max_critical: 0, max_warning: 3 }
+      B: { min_score: 80, max_critical: 0, max_warning: 5 }
+      C: { min_score: 70, max_critical: 2 }
+      D: { min_score: 0, max_critical: 999 }
+    # 关联分组：同位置同组的违规只计最高 severity
+    correlation_groups:
+      setting_integrity: [D013, D014, D015, L003, L004, L005]
+      character_behavior: [D001, D002, D003, L001, L008, L016]
+      readability: [D004, D005, D006, D007, D008, D009, D010, D011, D012, L011, L012, L013, L014]
+
+  # Fix Loop 参数（使用默认值）
+  fix_loop:
+    max_rounds: 3
+    convergence:
+      critical: 0
+      warning: 3
+      score: 85
+    stagnation_delta: 2
+
+  # 自学习参数（使用默认值）
+  self_learning:
+    upgrade_threshold:
+      times_applied: 10
+      effectiveness: 0.5
+    downgrade_threshold:
+      false_positive_rate: 0.3
+      times_applied: 5
+    # review_pending 队列配置
+    review_pending:
+      auto_approve_after: null  # 需人工审核
+      max_pending: 20
+
+  # 修复 Agent
+  fix_agent: "reviser"

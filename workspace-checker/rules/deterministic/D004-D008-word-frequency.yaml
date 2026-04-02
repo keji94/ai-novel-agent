@@ -1,0 +1,70 @@
+# D004-D008: 词汇频率和密度
+
+- id: D004
+  name: "转折词密度"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: density
+  words: ['仿佛', '宛如', '犹如', '好似', '忽然', '突然', '骤然', '竟然', '居然', '不料', '不禁', '不由得', '忍不住']
+  threshold: "每3000字允许1次（单词）"
+  message: "转折词密度过高，建议减少使用"
+  applies_to: [all]
+  source: editor_mode0+detector
+
+- id: D005
+  name: "高疲劳词"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: fatigue
+  # 具体疲劳词从 genre_profile 动态加载
+  genre_profiles:
+    xianxia: ['冷笑', '蝼蚁', '倒吸凉气', '瞳孔骤缩', '天道', '大道', '因果', '气运']
+    xuanhuan: ['妖孽', '逆天', '震撼', '恐怖', '惊人', '无法想象', '不可思议']
+    urban: ['恐怖如斯', '不怒自威', '气场', '霸道']
+  threshold: "每词每章≤1次"
+  message: "疲劳词超频，建议替换为更具体的表达"
+  applies_to: [all]
+  source: editor_mode0+detector
+
+- id: D006
+  name: "报告术语"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: keyword_list
+  # 常见分析框架术语
+  keywords: ['与此同时', '在此背景下', '值得注意的是', '从...角度来看', '在一定程度上']
+  threshold: "全章≤1次"
+  message: "分析框架术语，建议用自然叙述替代"
+  applies_to: [all]
+  source: editor_mode0
+
+- id: D007
+  name: "作者说教词"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: keyword_list
+  words: ['显然', '不言而喻', '众所周知', '毋庸置疑', '理所当然', '显而易见', '毫无悬念']
+  threshold: "全章≤1次"
+  message: "说教式表达，避免直接评论"
+  applies_to: [all]
+  source: editor_mode0+detector
+
+- id: D008
+  name: "集体反应套话"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: pattern_list
+  patterns:
+    - '全场[^，]{0,5}震惊'
+    - '所有人[^，]{0,5}倒吸.*气'
+    - '众人[^，]{0,5}瞳孔.*缩'
+    - '所有人[^，]{0,5}目瞪口呆'
+    - '全场[^，]{0,5}哗然'
+  message: "集体反应套话，建议具体描写不同人的反应"
+  applies_to: [all]
+  source: editor_mode0+detector

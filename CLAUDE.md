@@ -2,6 +2,9 @@
 
 基于 OpenClaw workspace 架构 + Harness 工程思想的 **AI 网文写作框架**。
 
+你需要具备 openclaw 项目的知识，我在本地给你放了一份源码，在有必要的时候查看源码：/Users/nieyi6/IdeaProjects/openclaw
+
+
 ## 项目定位
 这是一个多 Agent 协作的网文创作系统，Main Agent 作为 Supervisor 路由用户请求到专业子 Agent，覆盖从灵感探索到成稿的完整创作流程。
 
