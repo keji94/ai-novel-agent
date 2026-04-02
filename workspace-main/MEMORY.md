@@ -8,6 +8,8 @@
 
 ## 用户偏好
 
+- **三江扫榜**: 使用 `sanjiang-analyzer` skill（位于 `workspace-analyst/skills/sanjiang-analyzer/SKILL.md`），不要用 Operator 凭空分析
+
 <!-- 记录用户的创作偏好，如喜欢的类型、风格等 -->
 
 ## 常用工作流
