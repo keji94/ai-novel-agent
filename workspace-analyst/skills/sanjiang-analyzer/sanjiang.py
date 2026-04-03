@@ -52,6 +52,7 @@ BOOK_INDEX_FILE = DATA_DIR / "book_index.json"
 QIDIAN_MOBILE_BOOK_URL = "https://m.qidian.com/book/{book_id}/"
 QIDIAN_MOBILE_CATALOG_URL = "https://m.qidian.com/book/{book_id}/catalog/"
 QIDIAN_MOBILE_CHAPTER_URL = "https://m.qidian.com/chapter/{book_id}/{chapter_id}/"
+QQ_READ_SEARCH_URL = "https://book.qq.com/so/{name}"
 QIDIAN_TU_URL = "https://www.qidiantu.com/bang/1/6/{date}"
 
 HEADERS = {
@@ -80,9 +81,9 @@ QIDIAN_MOBILE_HEADERS = {
     "Accept-Encoding": "gzip, deflate",
 }
 
-CONCURRENT_CHAPTERS = 1
-BATCH_DELAY_SEC = 3.0
-BOOK_DELAY_SEC = 5.0
+CONCURRENT_CHAPTERS = 5
+BATCH_DELAY_SEC = 0.5
+BOOK_DELAY_SEC = 1.0
 REQUEST_TIMEOUT = 15
 PAID_CONTENT_MIN_LEN = 500
 MAX_RETRIES = 3
@@ -178,6 +179,218 @@ def http_get_mobile(url: str, timeout: int = REQUEST_TIMEOUT, retries: int = MAX
                 continue
             log.warning("HTTP GET(mobile) 失败: %s - %s", url, e)
             return None
+
+
+# ============================================================
+# QQ Read Parser
+# ============================================================
+
+
+class QQReadParser:
+    """QQ阅读(book.qq.com) HTML 解析器"""
+
+    @staticmethod
+    def parse_search_result(html: str) -> List[Dict]:
+        if not html:
+            return []
+        soup = BeautifulSoup(html, "html.parser")
+        novels = []
+        for item in soup.select("div.result-item"):
+            novel = QQReadParser._parse_result_item(item)
+            if novel:
+                novels.append(novel)
+        log.info("QQ阅读搜索到 %d 本小说", len(novels))
+        return novels
+
+    @staticmethod
+    def _parse_result_item(item) -> Optional[Dict]:
+        book_id = item.get("mulan-bid", "")
+        if not book_id:
+            return None
+
+        title_el = item.select_one("h4.title")
+        book_name = title_el.get_text(strip=True) if title_el else ""
+
+        intro_el = item.select_one("p.intro")
+        description = intro_el.get_text(strip=True) if intro_el else ""
+
+        author_el = item.select_one("p.other a[href*='book-writer']")
+        author = author_el.get_text(strip=True) if author_el else ""
+
+        category_el = item.select_one("p.other a[href*='book-cate']")
+        category = ""
+        if category_el:
+            category = category_el.get_text(strip=True).lstrip("·")
+
+        status = ""
+        for span in item.select("p.other span"):
+            text = span.get_text(strip=True)
+            if "连载" in text:
+                status = "连载中"
+                break
+            elif "完结" in text:
+                status = "已完结"
+                break
+
+        word_count = ""
+        for span in item.select("p.other span"):
+            text = span.get_text(strip=True)
+            if "万字" in text:
+                word_count = text.replace("·", "")
+                break
+
+        link_el = item.select_one("a.wrap")
+        detail_url = ""
+        if link_el:
+            href = link_el.get("href", "")
+            detail_url = "https:" + href if href.startswith("//") else href
+
+        img_el = item.select_one("img.ypc-book-cover")
+        cover_url = ""
+        if img_el:
+            cover_url = img_el.get("src") or img_el.get("data-src", "")
+
+        return {
+            "id": book_id,
+            "name": book_name,
+            "author": author,
+            "description": description,
+            "coverUrl": cover_url,
+            "status": status,
+            "category": category,
+            "wordCount": word_count,
+            "detailUrl": detail_url,
+        }
+
+    @staticmethod
+    def parse_book_detail(html: str) -> Dict:
+        soup = BeautifulSoup(html, "html.parser")
+
+        title = ""
+        for sel in ["h1.book-title", "h1.title", ".book-info h1", "h1"]:
+            el = soup.select_one(sel)
+            if el:
+                title = el.get_text(strip=True)
+                if title:
+                    break
+
+        author = ""
+        meta_author = soup.select_one("meta[property='og:novel:author']")
+        if meta_author:
+            author = meta_author.get("content", "").strip()
+        if not author:
+            for sel in [".book-author", ".author", ".writer"]:
+                el = soup.select_one(sel)
+                if el:
+                    author = el.get_text(strip=True)
+                    break
+
+        intro_el = soup.select_one("div.book-intro[data-txt=展开]")
+        description = f"简介：\n{intro_el.get_text(strip=True)}" if intro_el else ""
+
+        cover_url = ""
+        for sel in ["img.ypc-book-cover", "img.book-cover", ".book-cover img", "img.cover"]:
+            el = soup.select_one(sel)
+            if el:
+                cover_url = el.get("src") or el.get("data-src", "")
+                if cover_url:
+                    break
+
+        return {
+            "title": title,
+            "author": author,
+            "description": description,
+            "coverUrl": cover_url,
+        }
+
+    @staticmethod
+    def parse_free_chapters(html: str) -> List[Dict]:
+        if not html:
+            return []
+        soup = BeautifulSoup(html, "html.parser")
+        chapters = []
+
+        chapter_items = []
+        for book_dir in soup.select("ul.book-dir"):
+            style = book_dir.get("style", "").lower()
+            if "display:none" in style or "visibility:hidden" in style:
+                continue
+            chapter_items = book_dir.select("li.list")
+            break
+
+        if not chapter_items:
+            chapter_items = soup.select("li.list, li[class*='list'], .chapter-item, .item")
+
+        idx = 1
+        for item in chapter_items:
+            if QQReadParser._is_paid(item):
+                log.info("检测到收费章节，停止获取，当前索引: %d", idx)
+                break
+            link = item.select_one("a")
+            if not link:
+                continue
+
+            href = link.get("href", "")
+            if href.startswith("//"):
+                url = "https:" + href
+            elif href.startswith("/"):
+                url = "https://book.qq.com" + href
+            else:
+                url = href
+
+            title_el = link.select_one("span.name, .title, .chapter-title")
+            title = (title_el or link).get_text(strip=True) or f"第{idx}章"
+
+            chapters.append({"index": idx, "url": url, "title": title})
+            idx += 1
+
+        log.info("解析到 %d 个免费章节", len(chapters))
+        return chapters
+
+    @staticmethod
+    def _is_paid(item) -> bool:
+        if item.select_one("i.lock") or item.select_one("i[class*='lock']"):
+            return True
+        text = item.get_text().lower()
+        return any(kw in text for kw in ["付费", "vip", "订阅", "购买", "收费"])
+
+    @staticmethod
+    def parse_chapter_content(html: str) -> str:
+        if not html:
+            return ""
+        soup = BeautifulSoup(html, "html.parser")
+
+        if soup.select_one("div.purchase"):
+            return ""
+
+        title_el = soup.select_one("h1.chapter-title")
+        title = title_el.get_text(strip=True) if title_el else "未知章节"
+
+        content_el = None
+        for sel in [
+            "div#article.chapter-content.isTxt",
+            "div.chapter-content.isTxt",
+            "div#article",
+            "div.chapter-content",
+            ".content",
+            ".chapter-body",
+        ]:
+            content_el = soup.select_one(sel)
+            if content_el:
+                break
+
+        if not content_el:
+            return title
+
+        paragraphs = content_el.select("p")
+        if not paragraphs:
+            text = content_el.get_text(strip=True)
+            return f"{title}\n\n{text}" if text else title
+
+        content = "\n\n".join(
+            p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True)
+        )
+        return f"{title}\n\n{content}" if content else title
 
 
 # ============================================================
@@ -403,20 +616,32 @@ class SanJiangParser:
 
 
 class NovelFetcher:
-    """小说内容获取器：通过起点移动版获取章节内容
+    """小说内容获取器：双源策略（QQ阅读优先，起点移动版备用）
 
-    流程：从起点图获取 bookId → 获取移动版目录页 → 提取章节列表 → 并发获取免费章节内容
+    流程：
+    1. QQ阅读搜索 → 精确匹配（书名+作者） → 获取详情页 → 解析免费章节 → 获取内容
+    2. 若QQ阅读匹配失败 → fallback 到起点移动版（通过 bookId 直接获取）
     """
 
     @staticmethod
     def _extract_book_id(book_detail_url: str) -> Optional[str]:
-        """从起点图的书籍链接提取 bookId
-        格式: /info/1044155341 或 /info/1044155341/d
-        """
+        """从起点图的书籍链接提取 bookId"""
         if not book_detail_url:
             return None
         m = re.search(r'/info/(\d+)', book_detail_url)
         return m.group(1) if m else None
+
+    @staticmethod
+    def _verify_match(matched_name: str, matched_author: str,
+                      expected_name: str, expected_author: str) -> bool:
+        """校验匹配结果是否与起点图书籍一致"""
+        if not expected_name:
+            return True
+        if matched_name.lower() != expected_name.lower():
+            return False
+        if expected_author and matched_author and matched_author.lower() != expected_author.lower():
+            return False
+        return True
 
     @staticmethod
     def fetch_novel(
@@ -425,56 +650,187 @@ class NovelFetcher:
         max_chapters: int = 0,
         detail_url: str = "",
     ) -> Optional[Dict]:
-        """获取小说详情和章节内容
+        """获取小说详情和章节内容（双源策略）"""
+        # 尝试1：QQ阅读
+        result = NovelFetcher._fetch_from_qq_read(novel_name, author_name, max_chapters)
+        if result:
+            log.info("QQ阅读获取成功: %s", novel_name)
+            return result
 
-        Args:
-            novel_name: 书名
-            author_name: 作者名
-            max_chapters: 最大章节数，0=全部免费章节
-            detail_url: 起点图书籍链接（包含 bookId）
-        """
-        # 提取 bookId
+        # 尝试2：起点移动版 fallback
+        log.info("QQ阅读失败，尝试起点移动版: %s", novel_name)
+        result = NovelFetcher._fetch_from_qidian_mobile(novel_name, author_name, max_chapters, detail_url)
+        if result:
+            log.info("起点移动版获取成功: %s", novel_name)
+            return result
+
+        log.warning("双源均失败: %s", novel_name)
+        return None
+
+    # ---------- QQ阅读源 ----------
+
+    @staticmethod
+    def _fetch_from_qq_read(
+        novel_name: str, author_name: str, max_chapters: int
+    ) -> Optional[Dict]:
+        """通过QQ阅读搜索获取书籍内容"""
+        # 搜索
+        html = http_get(QQ_READ_SEARCH_URL.format(name=quote(novel_name)))
+        if not html:
+            return None
+
+        novels = QQReadParser.parse_search_result(html)
+        if not novels:
+            return None
+
+        # 匹配最佳结果（必须校验书名+作者）
+        matched = NovelFetcher._find_best_match(novels, novel_name, author_name)
+        if not matched:
+            log.info("QQ阅读搜索无精确匹配: %s (作者: %s)", novel_name, author_name)
+            return None
+
+        # 校验匹配结果
+        if not NovelFetcher._verify_match(
+            matched.get("name", ""), matched.get("author", ""),
+            novel_name, author_name
+        ):
+            log.info("QQ阅读匹配校验失败: 搜索到「%s - %s」, 期望「%s - %s」",
+                     matched.get("name", ""), matched.get("author", ""), novel_name, author_name)
+            return None
+
+        detail_url = matched.get("detailUrl", "")
+        if not detail_url:
+            return None
+
+        # 获取详情页
+        html = http_get(detail_url)
+        if not html:
+            return None
+
+        basic_info = QQReadParser.parse_book_detail(html)
+        chapters_meta = QQReadParser.parse_free_chapters(html)
+
+        if not chapters_meta:
+            return None
+
+        # 限制章节数
+        target = chapters_meta
+        if max_chapters and max_chapters > 0 and len(chapters_meta) > max_chapters:
+            target = chapters_meta[:max_chapters]
+            log.info("限制获取前 %d 章（共 %d 个免费章节）", max_chapters, len(chapters_meta))
+
+        # 并发获取章节内容
+        chapters = NovelFetcher._fetch_qq_read_chapters(target)
+
+        # 如果限制后结果太少（付费章节混入），尝试获取全部
+        if (max_chapters and max_chapters > 0
+                and len(chapters) < max_chapters and len(chapters_meta) > max_chapters):
+            log.info("前 %d 章中存在付费章节，改为获取所有免费章节", max_chapters)
+            chapters = NovelFetcher._fetch_qq_read_chapters(chapters_meta)
+
+        if not chapters:
+            return None
+
+        total_words = sum(len(ch.get("content", "")) for ch in chapters)
+        return {
+            "bookName": basic_info.get("title") or novel_name,
+            "authorName": basic_info.get("author") or author_name or matched.get("author", ""),
+            "description": basic_info.get("description", ""),
+            "coverUrl": basic_info.get("coverUrl", ""),
+            "chapterCount": len(chapters),
+            "totalWords": total_words,
+            "chapters": chapters,
+        }
+
+    @staticmethod
+    def _fetch_qq_read_chapters(chapter_metas: List[Dict]) -> List[Dict]:
+        """QQ阅读并发获取章节内容"""
+        results: List[Dict] = []
+        total = len(chapter_metas)
+
+        with ThreadPoolExecutor(max_workers=CONCURRENT_CHAPTERS) as executor:
+            for batch_start in range(0, total, CONCURRENT_CHAPTERS):
+                batch = chapter_metas[batch_start : batch_start + CONCURRENT_CHAPTERS]
+                futures = {
+                    executor.submit(NovelFetcher._fetch_qq_read_single_chapter, ch): ch
+                    for ch in batch
+                }
+                for future in as_completed(futures):
+                    try:
+                        ch = future.result()
+                        if ch:
+                            results.append(ch)
+                    except Exception as e:
+                        meta = futures[future]
+                        log.warning("获取第 %d 章失败: %s", meta.get("index"), e)
+
+                if batch_start + CONCURRENT_CHAPTERS < total:
+                    time.sleep(BATCH_DELAY_SEC)
+
+        results.sort(key=lambda x: x["index"])
+        return results
+
+    @staticmethod
+    def _fetch_qq_read_single_chapter(meta: Dict) -> Optional[Dict]:
+        """QQ阅读获取单个章节"""
+        url = meta["url"]
+        html = http_get(url)
+        if not html:
+            return None
+
+        content = QQReadParser.parse_chapter_content(html)
+        if not content or len(content.strip()) < PAID_CONTENT_MIN_LEN:
+            return None
+
+        title = meta["title"]
+        parts = content.split("\n\n", 1)
+        if parts:
+            maybe_title = parts[0].strip()
+            if (maybe_title and len(maybe_title) < 100
+                    and "付费" not in maybe_title and "VIP" not in maybe_title):
+                title = maybe_title
+
+        return {
+            "index": meta["index"],
+            "title": title,
+            "content": content,
+        }
+
+    # ---------- 起点移动版源 ----------
+
+    @staticmethod
+    def _fetch_from_qidian_mobile(
+        novel_name: str, author_name: str, max_chapters: int, detail_url: str
+    ) -> Optional[Dict]:
+        """通过起点移动版获取书籍内容（fallback）"""
         book_id = NovelFetcher._extract_book_id(detail_url)
         if not book_id:
             log.warning("无法从链接提取 bookId: %s", detail_url)
             return None
 
-        # 获取基本信息
-        book_url = QIDIAN_MOBILE_BOOK_URL.format(book_id=book_id)
-        book_html = http_get_mobile(book_url)
+        book_html = http_get_mobile(QIDIAN_MOBILE_BOOK_URL.format(book_id=book_id))
         if not book_html:
-            log.warning("无法访问起点移动版书籍页: %s", book_url)
             return None
 
         basic_info = QidianMobileParser.parse_book_info(book_html)
 
-        # 获取章节目录
-        catalog_url = QIDIAN_MOBILE_CATALOG_URL.format(book_id=book_id)
-        catalog_html = http_get_mobile(catalog_url)
+        catalog_html = http_get_mobile(QIDIAN_MOBILE_CATALOG_URL.format(book_id=book_id))
         if not catalog_html:
-            log.warning("无法访问起点移动版目录页: %s", catalog_url)
             return None
 
         all_chapters = QidianMobileParser.parse_catalog(catalog_html)
         if not all_chapters:
-            log.warning("未获取到任何章节: %s", novel_name)
             return None
 
-        # 限制章节数
         target = all_chapters
         if max_chapters and max_chapters > 0 and len(all_chapters) > max_chapters:
             target = all_chapters[:max_chapters]
-            log.info("限制获取前 %d 章（共 %d 章）", max_chapters, len(all_chapters))
 
-        # 并发获取章节内容
-        chapters = NovelFetcher._fetch_chapters_concurrently(book_id, target)
-
+        chapters = NovelFetcher._fetch_qidian_mobile_chapters(book_id, target)
         if not chapters:
-            log.warning("未获取到任何章节内容: %s", novel_name)
             return None
 
         total_words = sum(len(ch.get("content", "")) for ch in chapters)
-
         return {
             "bookName": basic_info.get("title") or novel_name,
             "authorName": basic_info.get("author") or author_name,
@@ -486,17 +842,16 @@ class NovelFetcher:
         }
 
     @staticmethod
-    def _fetch_chapters_concurrently(book_id: str, chapter_metas: List[Dict]) -> List[Dict]:
-        """串行获取章节内容（避免触发起点限流）"""
+    def _fetch_qidian_mobile_chapters(book_id: str, chapter_metas: List[Dict]) -> List[Dict]:
+        """起点移动版串行获取章节（避免触发限流）"""
         results: List[Dict] = []
         for i, meta in enumerate(chapter_metas):
             try:
-                ch = NovelFetcher._fetch_single_chapter(book_id, meta)
+                ch = NovelFetcher._fetch_qidian_mobile_single_chapter(book_id, meta)
                 if ch:
                     results.append(ch)
             except Exception as e:
                 log.warning("获取章节失败: %s - %s", meta.get("name"), e)
-            # 章节之间延迟
             if i < len(chapter_metas) - 1:
                 time.sleep(BATCH_DELAY_SEC)
 
@@ -504,7 +859,8 @@ class NovelFetcher:
         return results
 
     @staticmethod
-    def _fetch_single_chapter(book_id: str, meta: Dict) -> Optional[Dict]:
+    def _fetch_qidian_mobile_single_chapter(book_id: str, meta: Dict) -> Optional[Dict]:
+        """起点移动版获取单个章节"""
         chapter_id = meta.get("id")
         if not chapter_id:
             return None
@@ -523,6 +879,38 @@ class NovelFetcher:
             "title": meta.get("name", ""),
             "content": content,
         }
+
+    # ---------- 匹配逻辑 ----------
+
+    @staticmethod
+    def _find_best_match(
+        novels: List[Dict], novel_name: str, author_name: str = ""
+    ) -> Optional[Dict]:
+        """精确匹配：必须书名一致，有作者时作者也必须一致"""
+        if not novels:
+            return None
+        name_lower = novel_name.lower()
+
+        # 精确匹配：书名+作者
+        if author_name:
+            author_lower = author_name.lower()
+            for n in novels:
+                if n["name"].lower() == name_lower and n["author"].lower() == author_lower:
+                    return n
+            # 作者匹配（书名可能略有不同）
+            for n in novels:
+                if n["author"].lower() == author_lower:
+                    return n
+
+        # 精确书名匹配
+        for n in novels:
+            if n["name"].lower() == name_lower:
+                return n
+
+        # 都匹配不上
+        log.info("QQ阅读无精确匹配: %s (作者: %s), 搜索结果: %s",
+                 novel_name, author_name, [n["name"] for n in novels[:3]])
+        return None
 
 
 # ============================================================
