@@ -673,74 +673,81 @@ class NovelFetcher:
     def _fetch_from_qq_read(
         novel_name: str, author_name: str, max_chapters: int
     ) -> Optional[Dict]:
-        """通过QQ阅读搜索获取书籍内容"""
-        # 搜索
-        html = http_get(QQ_READ_SEARCH_URL.format(name=quote(novel_name)))
-        if not html:
-            return None
+        """通过QQ阅读搜索获取书籍内容（带搜索重试）"""
+        # QQ阅读搜索结果不稳定，最多重试3次
+        for attempt in range(3):
+            html = http_get(QQ_READ_SEARCH_URL.format(name=quote(novel_name)))
+            if not html:
+                continue
 
-        novels = QQReadParser.parse_search_result(html)
-        if not novels:
-            return None
+            novels = QQReadParser.parse_search_result(html)
+            if not novels:
+                continue
 
-        # 匹配最佳结果（必须校验书名+作者）
-        matched = NovelFetcher._find_best_match(novels, novel_name, author_name)
-        if not matched:
-            log.info("QQ阅读搜索无精确匹配: %s (作者: %s)", novel_name, author_name)
-            return None
+            # 匹配最佳结果（必须校验书名+作者）
+            matched = NovelFetcher._find_best_match(novels, novel_name, author_name)
+            if not matched:
+                if attempt < 2:
+                    log.info("QQ阅读第%d次搜索无精确匹配，%ds后重试: %s", attempt + 1, 3, novel_name)
+                    time.sleep(3)
+                    continue
+                log.info("QQ阅读搜索无精确匹配（已重试3次）: %s (作者: %s)", novel_name, author_name)
+                return None
 
-        # 校验匹配结果
-        if not NovelFetcher._verify_match(
-            matched.get("name", ""), matched.get("author", ""),
-            novel_name, author_name
-        ):
-            log.info("QQ阅读匹配校验失败: 搜索到「%s - %s」, 期望「%s - %s」",
-                     matched.get("name", ""), matched.get("author", ""), novel_name, author_name)
-            return None
+            # 校验匹配结果
+            if not NovelFetcher._verify_match(
+                matched.get("name", ""), matched.get("author", ""),
+                novel_name, author_name
+            ):
+                log.info("QQ阅读匹配校验失败: 搜索到「%s - %s」, 期望「%s - %s」",
+                         matched.get("name", ""), matched.get("author", ""), novel_name, author_name)
+                return None
 
-        detail_url = matched.get("detailUrl", "")
-        if not detail_url:
-            return None
+            detail_url = matched.get("detailUrl", "")
+            if not detail_url:
+                return None
 
-        # 获取详情页
-        html = http_get(detail_url)
-        if not html:
-            return None
+            # 获取详情页
+            html = http_get(detail_url)
+            if not html:
+                return None
 
-        basic_info = QQReadParser.parse_book_detail(html)
-        chapters_meta = QQReadParser.parse_free_chapters(html)
+            basic_info = QQReadParser.parse_book_detail(html)
+            chapters_meta = QQReadParser.parse_free_chapters(html)
 
-        if not chapters_meta:
-            return None
+            if not chapters_meta:
+                return None
 
-        # 限制章节数
-        target = chapters_meta
-        if max_chapters and max_chapters > 0 and len(chapters_meta) > max_chapters:
-            target = chapters_meta[:max_chapters]
-            log.info("限制获取前 %d 章（共 %d 个免费章节）", max_chapters, len(chapters_meta))
+            # 限制章节数
+            target = chapters_meta
+            if max_chapters and max_chapters > 0 and len(chapters_meta) > max_chapters:
+                target = chapters_meta[:max_chapters]
+                log.info("限制获取前 %d 章（共 %d 个免费章节）", max_chapters, len(chapters_meta))
 
-        # 并发获取章节内容
-        chapters = NovelFetcher._fetch_qq_read_chapters(target)
+            # 并发获取章节内容
+            chapters = NovelFetcher._fetch_qq_read_chapters(target)
 
-        # 如果限制后结果太少（付费章节混入），尝试获取全部
-        if (max_chapters and max_chapters > 0
-                and len(chapters) < max_chapters and len(chapters_meta) > max_chapters):
-            log.info("前 %d 章中存在付费章节，改为获取所有免费章节", max_chapters)
-            chapters = NovelFetcher._fetch_qq_read_chapters(chapters_meta)
+            # 如果限制后结果太少（付费章节混入），尝试获取全部
+            if (max_chapters and max_chapters > 0
+                    and len(chapters) < max_chapters and len(chapters_meta) > max_chapters):
+                log.info("前 %d 章中存在付费章节，改为获取所有免费章节", max_chapters)
+                chapters = NovelFetcher._fetch_qq_read_chapters(chapters_meta)
 
-        if not chapters:
-            return None
+            if not chapters:
+                return None
 
-        total_words = sum(len(ch.get("content", "")) for ch in chapters)
-        return {
-            "bookName": basic_info.get("title") or novel_name,
-            "authorName": basic_info.get("author") or author_name or matched.get("author", ""),
-            "description": basic_info.get("description", ""),
-            "coverUrl": basic_info.get("coverUrl", ""),
-            "chapterCount": len(chapters),
-            "totalWords": total_words,
-            "chapters": chapters,
-        }
+            total_words = sum(len(ch.get("content", "")) for ch in chapters)
+            return {
+                "bookName": basic_info.get("title") or novel_name,
+                "authorName": basic_info.get("author") or author_name or matched.get("author", ""),
+                "description": basic_info.get("description", ""),
+                "coverUrl": basic_info.get("coverUrl", ""),
+                "chapterCount": len(chapters),
+                "totalWords": total_words,
+                "chapters": chapters,
+            }
+
+        return None
 
     @staticmethod
     def _fetch_qq_read_chapters(chapter_metas: List[Dict]) -> List[Dict]:
