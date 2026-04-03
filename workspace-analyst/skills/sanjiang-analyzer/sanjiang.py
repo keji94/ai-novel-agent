@@ -93,6 +93,15 @@ def get_monday(d: Optional[date] = None) -> date:
     return d - timedelta(days=d.weekday())
 
 
+def get_latest_sunday(d: Optional[date] = None) -> date:
+    """获取最近一个周日（三江榜按周日发布）。
+    如果今天就是周日，返回今天；否则返回上一个周日。
+    """
+    if d is None:
+        d = date.today()
+    return d - timedelta(days=(d.weekday() + 1) % 7)
+
+
 def json_dumps(obj: Any) -> str:
     return json.dumps(obj, ensure_ascii=False, indent=2)
 
@@ -885,7 +894,10 @@ def execute_fetch_and_cache(task_id: str, report_date: str, max_chapters: int):
 
 
 def cmd_fetch_cache(args):
-    report_date = get_monday().isoformat()
+    if args.date:
+        report_date = args.date
+    else:
+        report_date = get_latest_sunday().isoformat()
     max_chapters = args.max_chapters if args.max_chapters != 0 else 0
 
     tm = TaskManager()
@@ -945,8 +957,7 @@ def cmd_books(args):
     if args.book_name:
         books = cm.search_books(args.book_name)
     elif args.date:
-        monday = get_monday(date.fromisoformat(args.date))
-        books = cm.get_books_by_date(monday.isoformat())
+        books = cm.get_books_by_date(args.date)
     else:
         books = cm.get_all_latest_books()
 
@@ -994,6 +1005,7 @@ def main():
         "--max-chapters", type=int, default=20,
         help="最大章节数，0=全部免费章节 (默认: 20)",
     )
+    p.add_argument("--date", help="指定日期 (YYYY-MM-DD)，默认自动获取最近周日")
     p.set_defaults(func=cmd_fetch_cache)
 
     # task-status
