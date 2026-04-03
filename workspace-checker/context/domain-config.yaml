@@ -80,6 +80,28 @@ domain_config:
       score: 85
     stagnation_delta: 2
 
+  # AIGC Harness 参数
+  aigc_harness:
+    semantic_dimensions:
+      - {name: "句式单调", weight: 5}
+      - {name: "逻辑跳跃", weight: 8}
+      - {name: "情感平淡", weight: 6}
+      - {name: "描写空洞", weight: 7}
+      - {name: "对话生硬", weight: 6}
+    revision_thresholds:
+      rewrite: 60
+      anti_detect: 70
+      polish: 80
+    convergence:
+      pass_score: 75
+      significant_improvement: 10
+      acceptable_improvement: 5
+    fix_loop:
+      max_rounds: 2
+      stagnation_delta: 2
+    fix_agent: "reviser"
+    segment_size: 3000
+
   # 自学习参数
   self_learning:
     upgrade_threshold:

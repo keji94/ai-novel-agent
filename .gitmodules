@@ -1,0 +1,3 @@
+[submodule ".openclaw/skills/content-scanner"]
+	path = .openclaw/skills/content-scanner
+	url = file:///Users/nieyi6/IdeaProjects/openclaw-content-scanner

@@ -1,14 +1,47 @@
-# D001-D003: 禁止句式和标点
+# D001-D003, D022-D024: 禁止句式和标点
 
 - id: D001
-  name: "禁止句式「不是...而是...」"
+  name: "禁止句式「不是...而是...」及其变体"
   phase: 1
   severity: critical
   weight: 10
-  pattern: '不是[^。！？]{0,20}而是'
-  message: "禁止句式「不是...而是...」，改写为直接叙述"
+  patterns:
+    - '不是[^。！？]{0,20}而是'
+    - '不是不[^，。！？]{0,10}[，。]'
+    - '不是X，是[^。！？]{0,30}[。！？]'
+  message: "禁止「不是...而是...」及其变体（不是不X、不是X，是Y），改写为直接叙述"
   applies_to: [all]
   source: editor_mode0+detector
+  note: "v2 扩展：覆盖'不是不想，是...'反标签句式"
+
+- id: D022
+  name: "明喻密度过高"
+  phase: 1
+  severity: warning
+  weight: 5
+  type: density
+  words: ['像', '像是', '如同', '好比']
+  threshold: "每1000字允许2次"
+  message: "明喻密度过高（>2个/千字），每个感受都配比喻是AI特征，适当让描写裸奔"
+  applies_to: [all]
+  source: detector
+  note: "检测'像/像是'作比喻用法的频率，与D004互补"
+
+- id: D023
+  name: "编号式心理总结"
+  phase: 1
+  severity: warning
+  weight: 6
+  type: pattern_list
+  patterns:
+    - '教会.{0,5}他的第.{0,2}件'
+    - '人生教会.{0,5}的.{0,5}件事'
+    - '第.{0,2}件事'
+    - '第.{0,2}课是'
+    - '学到.{0,5}第.{0,2}课'
+  message: "编号式心理总结（'第X件事/第X课'），人类不会给自己的顿悟排号，直接写感悟"
+  applies_to: [all]
+  source: detector
 
 - id: D002
   name: "禁止破折号"

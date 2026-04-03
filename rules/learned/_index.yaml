@@ -7,6 +7,7 @@
 #
 # 规则来源:
 #   - 定稿差异分析 (Editor Mode 7): 用户人工修改章节后系统学习生成
+#   - AIGC Harness (Rule 6.5): AIGC 诊断后自动沉淀的规则
 #   - Checker 自学习反馈: Checker 检查反馈驱动（待启用）
 
 total_learned_rules: 0

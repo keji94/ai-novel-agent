@@ -39,3 +39,18 @@ replacements:
     human_alternatives: ["（删除，或用其他表达）"]
     severity: warning
     note: "高疲劳词，与 D004 关联"
+
+  - ai_pattern: "不是不想，是..."
+    human_alternatives: ["直接写结果/实际状态，跳过否定铺垫"]
+    severity: critical
+    note: "反标签句式，与 D001 v2 关联。例：'不是不想，是乱得组织不起'→'脑子里乱成一团'"
+
+  - ai_pattern: "第X件事/第X课"
+    human_alternatives: ["删除编号，直接写感悟/行为"]
+    severity: warning
+    note: "编号式自我总结，与 D023 关联。例：'人生教会他的第一件事'→直接展示行为"
+
+  - ai_pattern: "像一面...的旗/像...的..."
+    human_alternatives: ["减少明喻，让部分描写裸奔（不带比喻）"]
+    severity: warning
+    note: "明喻过密，与 D022 关联。不是每个感受都需要比喻"

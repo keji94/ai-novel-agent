@@ -18,7 +18,7 @@
 成本: 零 LLM（仅确定性规则）
 时间: < 10秒
 
-规则来源: rules/deterministic/ (D001-D015)
+规则来源: rules/deterministic/ (D001-D023)
 执行脚本: .openclaw/skills/content-scanner/scripts/run_deterministic.py
 规则详情: rules/_index.md
 
@@ -27,6 +27,9 @@
   - 转折词密度/疲劳词/报告术语/说教词/集体套话 (D004-D008, warning)
   - 连续了字/段落过长 (D009-D010, warning)
   - 设定门控: 提前释放/认知越级/重复引入 (D013-D015, critical/warning)
+  - AI 痕迹统计: TTR/句长标准差/段落标准差/主动句比例 (D016-D019, info)
+  - 明喻密度控制 (D022, warning)
+  - 编号式自我总结 (D023, warning)
 
 校验流程（设定相关）:
   1. 读取 settings_release.json 索引

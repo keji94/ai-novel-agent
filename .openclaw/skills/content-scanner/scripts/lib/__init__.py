@@ -1,1 +1,0 @@
-# content-scanner scripts library

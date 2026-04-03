@@ -4,7 +4,7 @@
 
 ## 实现方式
 
-规则定义：`rules/deterministic/` (D001-D010)
+规则定义：`rules/deterministic/` (D001-D023)
 执行脚本：`.openclaw/skills/content-scanner/scripts/run_deterministic.py`
 规则详情：`rules/_index.md`
 

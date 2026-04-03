@@ -196,6 +196,19 @@ sessions_spawn({
 - 区分确定性规则和语义分析
 - 提供统计摘要
 
+---
+
+## Harness 集成
+
+Detector 是 AIGC 优化 Harness（Rule 6.5）的检测引擎。Harness 触发时可能调用两种模式：
+
+| 模式 | 用途 | 说明 |
+|------|------|------|
+| quick | Phase 1 门控 | 仅确定性规则，判断是否需要完整分析 |
+| enhanced | Phase 1 诊断 + Phase 4 验证 | 确定性 + 语义分析 + 统计特征，产出 segment_violation_map |
+
+在 enhanced 模式下，报告需额外包含 `segment_violation_map`（按段落分组的违规列表），用于 Harness Phase 3 分段改写。
+
 ### 禁止做的事
 - 凭空臆测
 - 过度扣分
