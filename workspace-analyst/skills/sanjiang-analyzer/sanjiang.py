@@ -50,6 +50,7 @@ TASKS_DIR = DATA_DIR / "tasks"
 BOOK_INDEX_FILE = DATA_DIR / "book_index.json"
 
 QQ_READ_SEARCH_URL = "https://book.qq.com/so/{name}"
+QQ_READ_BASE_URL = "https://book.qq.com"
 QIDIAN_TU_URL = "https://www.qidiantu.com/bang/1/6/{date}"
 
 HEADERS = {
@@ -455,29 +456,34 @@ class NovelFetcher:
         novel_name: str,
         author_name: str = "",
         max_chapters: int = 0,
+        detail_url: str = "",
     ) -> Optional[Dict]:
         """获取小说详情和章节内容
 
-        流程：搜索QQ阅读 → 匹配最佳结果 → 获取详情页 → 解析免费章节 → 并发获取内容
+        流程：优先使用直链 → 否则搜索QQ阅读 → 匹配最佳结果 → 获取详情页 → 解析免费章节 → 并发获取内容
         """
-        # 搜索
-        result = NovelFetcher.search_novel(novel_name)
-        if not result:
-            log.warning("未搜索到小说: %s", novel_name)
-            return None
-
-        # 匹配最佳结果
-        matched = NovelFetcher._find_best_match(
-            QQReadParser.parse_search_result(
-                http_get(QQ_READ_SEARCH_URL.format(name=quote(novel_name))) or ""
-            ),
-            novel_name,
-            author_name,
-        )
-        if not matched:
-            matched = result
-
-        detail_url = matched.get("detailUrl", "")
+        # 如果有直链（来自起点图），直接转换为 QQ 阅读 URL
+        if detail_url:
+            # 起点图链接格式: /info/1044155341/d 或 https://www.qidiantu.com/info/xxx/d
+            # QQ阅读链接格式: https://book.qq.com/info/xxx/d
+            import re
+            m = re.search(r'/info/(\d+)/d', detail_url)
+            if m:
+                detail_url = f"{QQ_READ_BASE_URL}/info/{m.group(1)}/d"
+            else:
+                detail_url = ""
+        
+        if not detail_url:
+            # 没有直链，走搜索匹配
+            matched = NovelFetcher._find_best_match(
+                QQReadParser.parse_search_result(
+                    http_get(QQ_READ_SEARCH_URL.format(name=quote(novel_name))) or ""
+                ),
+                novel_name,
+                author_name,
+            )
+            if matched:
+                detail_url = matched.get("detailUrl", "")
         if not detail_url:
             log.warning("搜索结果无详情URL: %s", novel_name)
             return None
@@ -849,6 +855,7 @@ def execute_fetch_and_cache(task_id: str, report_date: str, max_chapters: int):
                     novel_name=book_name,
                     author_name=info["authorName"],
                     max_chapters=max_chapters,
+                    detail_url=info.get("bookDetailUrl", ""),
                 )
                 if novel:
                     cm.save_book(novel, report_date, extra={
