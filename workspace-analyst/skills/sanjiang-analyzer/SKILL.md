@@ -25,6 +25,7 @@
 | Step 6 | `💾 已保存《{书名}》报告到本地` |
 | Step 7 | `🖼️ 已生成《{书名}》分享图片（{数量}张）` |
 | Step 8 | `📤 已同步《{书名}》到飞书：{链接}` |
+| Step 9 | `📬 已发布到小绿书草稿箱（{N}张图片）` |
 
 ### 通知方式
 ```json
@@ -41,12 +42,13 @@
 - **每个步骤完成时**：发送步骤完成通知
 - **单本书完成时**：发送 "✅ 《{书名}》处理完成"
 - **全部完成时**：发送汇总报告
+- **Step 9 完成时**：发送 "📬 已发布到小绿书草稿箱"
 
 ---
 
 ## 🚀 快速开始
 
-### 核心流程（3步调度 + 5步执行）
+### 核心流程（3步调度 + 5步执行 + 1步发布）
 
 #### 阶段一：数据准备（在主会话中执行）
 
@@ -57,7 +59,34 @@ pip install -r skills/sanjiang-analyzer/requirements.txt
 Step 1: 触发异步任务     python sanjiang.py fetch-cache [--max-chapters N]
 Step 2: 轮询任务状态     python sanjiang.py task-status <taskId>
 Step 3: 获取书籍列表     python sanjiang.py books [--book-name NAME] [--date DATE]
+Step 3.5: 题材筛选       按 category 排序，取前 10 本（≈17本→10本）
 ```
+
+#### Step 3.5: 题材优先级筛选
+
+获取书单后，按题材优先级排序并取前 10 本，跳过低热度题材：
+
+**题材优先级**（与 Step 9 小绿书发布一致）：
+
+| 优先级 | 题材 |
+|--------|------|
+| 0 | 玄幻 |
+| 1 | 仙侠 |
+| 2 | 都市 |
+| 3 | 历史 |
+| 4 | 科幻 |
+| 5 | 游戏 |
+| 6 | 悬疑 |
+| 7 | 体育 |
+| 99 | 其他 |
+
+```javascript
+const genrePriority = { "玄幻": 0, "仙侠": 1, "都市": 2, "历史": 3, "科幻": 4, "游戏": 5, "悬疑": 6, "体育": 7 };
+books.sort((a, b) => (genrePriority[a.category] ?? 99) - (genrePriority[b.category] ?? 99));
+const selectedBooks = books.slice(0, 10);
+```
+
+> ⚠️ 一期三江约 17 本书，只取前 10 本热门题材。通知用户时说明筛掉了哪些题材。
 
 #### 阶段二：逐书处理（每本书启动独立子进程）⭐
 
@@ -84,19 +113,25 @@ Step 4: 获取章节详情     python sanjiang.py book --book-name <书名>  ←
 Step 5: AI解析报告       见 references/ai-analysis.md  ← 🔔 通知
 Step 6: 保存本地文件     见 references/output-spec.md  ← 🔔 通知 + 必须执行
 Step 7: 生成分享图片     见 references/output-spec.md  ← 🔔 通知 + 必须执行
-Step 8: 同步飞书文档     见 references/output-spec.md  ← 🔔 通知 + 最后执行 + 必须插入图片！
+Step 8: 同步飞书文档     见 references/output-spec-step8.md  ← 🔔 通知 + 最后执行 + 必须插入图片！
 ```
 
 > ⚠️ **Step 8 特别注意**：
 > - 创建文档后**必须插入分享图片**！
 > - 使用 `feishu_doc_media` 工具插入图片到文档末尾
 > - 图片路径：`/tmp/{书名}_新书扫榜_1.png`（需先从 `images/sanjiang/` 复制到 /tmp/）
-> - 详细步骤见 `references/output-spec.md`
+> - 详细步骤见 `references/output-spec-step8.md`
 
 > ⚠️ **重要**：
 > - Step 6-8 必须按顺序执行，不可跳过！
 > - **每本书必须启动独立子进程**，避免上下文爆炸！
 > - 子进程完成后通过 `streamTo: "parent"` 推送结果到主会话
+
+#### 阶段三：发布小绿书（在主会话中执行，所有书完成后）
+
+```
+Step 9: 发布小绿书       见 references/output-spec-step9.md  ← 🔔 通知 + 全自动（md2wechat create_image_post）
+```
 
 
 ### API 文档
@@ -110,7 +145,9 @@ Step 8: 同步飞书文档     见 references/output-spec.md  ← 🔔 通知 + 
 | 查询书籍列表 | `references/api-books-list.md` | 获取已缓存书籍 |
 | 获取章节详情 | `references/api-book-detail.md` | 获取单本书章节 |
 | AI 解析流程 | `references/ai-analysis.md` | 章节分析 Prompt |
-| 输出规范 | `references/output-spec.md` | 保存/同步/分享 |
+| 输出规范（总览） | `references/output-spec.md` | 通知机制 + Step 6/7 + 流程总结 |
+| Step 8 飞书同步 | `references/output-spec-step8.md` | 飞书文档创建 + 插入图片 |
+| Step 9 小绿书发布 | `references/output-spec-step9.md` | 图片排序 + 导读生成 + md2wechat 发布 |
 
 ---
 
@@ -151,10 +188,10 @@ Step 8: 同步飞书文档     见 references/output-spec.md  ← 🔔 通知 + 
 
 ### 输出规范文档
 
-6. **`references/output-spec.md`**
-   - Step 6: 本地文件保存
-   - Step 7: 生成分享图片（md2png）
-   - Step 8: 同步到飞书文档
+6. **`references/output-spec.md`** — 输出规范总览（通知机制 + Step 6/7 + 流程总结）
+7. **`references/output-spec-step8.md`** — Step 8: 飞书文档同步详细步骤
+8. **`references/output-spec-step9.md`** — Step 9: 小绿书发布详细步骤
+   - Step 9: 发布小绿书（全自动）
 
 ---
 
@@ -199,7 +236,26 @@ Step 8: 同步飞书文档     见 references/output-spec.md  ← 🔔 通知 + 
 
 ```javascript
 // Step 1-3: 获取书籍列表
-const books = await getBookList();
+const allBooks = await getBookList();
+
+// Step 3.5: 按题材优先级筛选，取前 10 本
+const genrePriority = { "玄幻": 0, "仙侠": 1, "都市": 2, "历史": 3, "科幻": 4, "游戏": 5, "悬疑": 6, "体育": 7 };
+allBooks.sort((a, b) => (genrePriority[a.category] ?? 99) - (genrePriority[b.category] ?? 99));
+const books = allBooks.slice(0, 10);  // 一期约17本，只取前10本热门题材
+
+// 通知用户筛选结果
+await message({
+    action: "send",
+    message: `📋 本期三江共 ${allBooks.length} 本，已按题材优先级选取 ${books.length} 本：${books.map(b => `《${b.bookName}》(${b.category})`).join("、")}`
+});
+
+const filteredOut = allBooks.slice(10);
+if (filteredOut.length > 0) {
+    await message({
+        action: "send",
+        message: `⏭️ 已跳过：${filteredOut.map(b => `《${b.bookName}》(${b.category})`).join("、")}`
+    });
+}
 
 // 逐书处理
 for (let i = 0; i < books.length; i++) {
@@ -233,8 +289,67 @@ await message({
     action: "send",
     message: `🎉 三江速评全部完成！共处理 ${books.length} 本书。`
 });
+
+// Step 9: 发布到小绿书（全自动）
+
+// 9.1 收集图片并按书分组
+const allImages = glob("images/sanjiang/*_新书扫榜_*.png");
+const bookGroups = groupByBook(allImages);  // { "书名A": ["_1.png", "_2.png"], "书名B": ["_1.png"] }
+
+// 9.2 按题材优先级排序：玄幻/仙侠/都市/历史放前面
+const genrePriority = { "玄幻": 0, "仙侠": 1, "都市": 2, "历史": 3, "科幻": 4, "游戏": 5, "悬疑": 6, "体育": 7 };
+bookGroups.sort((a, b) => (genrePriority[a.category] ?? 99) - (genrePriority[b.category] ?? 99));
+
+// 9.3 超过20张时从末尾整本移除（不拆散同一本书的图片）
+let totalImages = bookGroups.reduce((sum, g) => sum + g.images.length, 0);
+while (totalImages > 20) {
+    const removed = bookGroups.pop();
+    totalImages -= removed.images.length;
+}
+const sortedImages = bookGroups.flatMap(g => g.images);  // 同书图片保证连续
+const imagePaths = sortedImages.map(img => path.resolve(img)).join(",");
+const date = formatDate(new Date(), "YYYY-MM-DD");
+const dateCompact = formatDate(new Date(), "YYYYMMDD");
+
+// 9.4 生成导读说明（<1000字，从分析报告中提取亮点）
+const guideText = generateGuide({
+    date, bookGroups,
+    totalBooks: books.length,
+    genres: [...new Set(bookGroups.map(g => g.category))],
+    highlights: bookGroups.map(g => ({ name: g.bookName, category: g.category, highlight: g.highlight }))
+});
+// guideText 示例：
+// 🔥 本期三江速评 | 2026-04-03
+// 📊 共 10 本新书，覆盖 玄幻/仙侠/都市
+// 【玄幻】《书名》— 亮点概括...
+// 【都市】《书名》— 亮点概括...
+// 💡 编辑推荐：《书名》— 一句话理由
+// #三江推荐 #网文推荐
+
+// 9.5 发布（通过 stdin 传入导读）
+const result = exec(`echo '${escapeShell(guideText)}' | ~/bin/md2wechat create_image_post -t "三江速评 ${date}" --images "${imagePaths}" --json`);
+
+// 9.6 写入信号文件
+const signal = {
+    type: "sanjiang-publish", date: dateCompact,
+    title: `三江速评 ${date}`,
+    books: bookGroups.map(g => ({ name: g.bookName, category: g.category, image_count: g.images.length })),
+    images: sortedImages.map(img => path.resolve(img)),
+    guide_text: guideText,
+    book_count: bookGroups.length,
+    publish_result: result.success ? { media_id: result.data.media_id, draft_url: result.data.draft_url } : null,
+    created_at: new Date().toISOString()
+};
+writeFile(`/Users/nieyi6/IdeaProjects/openclaw-content-factory/inbox/sanjiang-publish_${dateCompact}.json`, JSON.stringify(signal, null, 2));
+
+await message({
+    action: "send",
+    message: result.success
+        ? `📬 已发布到小绿书草稿箱（${sortedImages.length}张图片，${bookGroups.length}本书）链接：${result.data.draft_url}`
+        : `❌ 小绿书发布失败：${result.error}，信号文件已保存，可到内容工厂手动重试`
+});
 ```
 
 ---
 
-*最后更新: 2026-04-02*
+*最后更新: 2026-04-03*
