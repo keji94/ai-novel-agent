@@ -285,9 +285,17 @@ class QidianMobileParser:
         soup = BeautifulSoup(html, "html.parser")
 
         # 起点移动版正文容器
-        content_el = soup.select_one(".j_readContent")
-        if not content_el:
-            content_el = soup.select_one(".read-content")
+        content_el = None
+        for sel in [
+            ".j_readContent",
+            ".read-content",
+            ".content",
+            ".chapter-content",
+            ".chapter-wrapper",
+        ]:
+            content_el = soup.select_one(sel)
+            if content_el:
+                break
 
         if not content_el:
             log.warning("章节页未找到正文容器")
