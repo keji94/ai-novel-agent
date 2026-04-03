@@ -460,30 +460,26 @@ class NovelFetcher:
     ) -> Optional[Dict]:
         """获取小说详情和章节内容
 
-        流程：优先使用直链 → 否则搜索QQ阅读 → 匹配最佳结果 → 获取详情页 → 解析免费章节 → 并发获取内容
+        流程：搜索QQ阅读 → 匹配最佳结果 → 获取详情页 → 解析免费章节 → 并发获取内容
         """
-        # 如果有直链（来自起点图），直接转换为 QQ 阅读 URL
-        if detail_url:
-            # 起点图链接格式: /info/1044155341/d 或 https://www.qidiantu.com/info/xxx/d
-            # QQ阅读链接格式: https://book.qq.com/info/xxx/d
-            import re
-            m = re.search(r'/info/(\d+)/d', detail_url)
-            if m:
-                detail_url = f"{QQ_READ_BASE_URL}/info/{m.group(1)}/d"
-            else:
-                detail_url = ""
-        
-        if not detail_url:
-            # 没有直链，走搜索匹配
-            matched = NovelFetcher._find_best_match(
-                QQReadParser.parse_search_result(
-                    http_get(QQ_READ_SEARCH_URL.format(name=quote(novel_name))) or ""
-                ),
-                novel_name,
-                author_name,
-            )
-            if matched:
-                detail_url = matched.get("detailUrl", "")
+        # 搜索
+        result = NovelFetcher.search_novel(novel_name)
+        if not result:
+            log.warning("未搜索到小说: %s", novel_name)
+            return None
+
+        # 匹配最佳结果（书名+作者精确匹配优先）
+        matched = NovelFetcher._find_best_match(
+            QQReadParser.parse_search_result(
+                http_get(QQ_READ_SEARCH_URL.format(name=quote(novel_name))) or ""
+            ),
+            novel_name,
+            author_name,
+        )
+        if not matched:
+            matched = result
+
+        detail_url = matched.get("detailUrl", "")
         if not detail_url:
             log.warning("搜索结果无详情URL: %s", novel_name)
             return None
@@ -540,20 +536,31 @@ class NovelFetcher:
     ) -> Optional[Dict]:
         if not novels:
             return None
+        name_lower = novel_name.lower()
+        # 精确匹配：书名+作者
         if author_name:
+            author_lower = author_name.lower()
             for n in novels:
-                if (
-                    n["name"].lower() == novel_name.lower()
-                    and n["author"].lower() == author_name.lower()
-                ):
+                if n["name"].lower() == name_lower and n["author"].lower() == author_lower:
                     return n
+            # 作者匹配（书名可能略有不同）
             for n in novels:
-                if n["author"].lower() == author_name.lower():
+                if n["author"].lower() == author_lower:
                     return n
+        # 精确书名匹配
         for n in novels:
-            if n["name"].lower() == novel_name.lower():
+            if n["name"].lower() == name_lower:
                 return n
-        return novels[0]
+        # 模糊匹配：书名包含目标或目标包含书名
+        for n in novels:
+            n_lower = n["name"].lower()
+            if name_lower in n_lower or n_lower in name_lower:
+                return n
+        # 都匹配不上，返回 None 而非第一个结果
+        log.warning("未找到精确匹配: %s (作者: %s), 搜索结果: %s",
+                     novel_name, author_name,
+                     [n["name"] for n in novels[:3]])
+        return None
 
     @staticmethod
     def _fetch_chapters_concurrently(chapter_metas: List[Dict]) -> List[Dict]:
