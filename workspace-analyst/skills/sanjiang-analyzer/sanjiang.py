@@ -449,7 +449,8 @@ class NovelFetcher:
         for n in novels:
             if n["name"].lower() == novel_name.lower():
                 return n
-        return novels[0]
+        # 不再盲取第一个结果，返回 None
+        return None
 
     @staticmethod
     def fetch_novel(
@@ -477,7 +478,8 @@ class NovelFetcher:
             author_name,
         )
         if not matched:
-            matched = result
+            log.warning("未在QQ阅读找到匹配书籍: %s (作者: %s)", novel_name, author_name)
+            return None
 
         detail_url = matched.get("detailUrl", "")
         if not detail_url:
