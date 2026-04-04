@@ -1,0 +1,25 @@
+# H003: 情绪总结过密
+# 来源: AIGC Harness Rule 6.5 (第1章 L2-22 诊断)
+# 现象: 短篇幅内多次出现"理性压制感性"式情绪总结句
+
+- id: H003
+  name: "情绪总结过密"
+  source: human_feedback
+  created_from: "aigc-harness/ch1-l2-22"
+  severity: warning
+  weight: 5
+  pattern_type: semantic
+  check_prompt: |
+    检查短篇幅内（500字以内）是否出现过多"情绪总结句"：
+    即明确把角色的心理状态用一句话概括的句子。
+    典型模式："先压下去"/"活下去再说"/"连崩溃都排不上号"/"手心出了汗"
+    AI倾向于每个情绪点都做明确总结，不留给读者自行体会的空间。
+    人类作者通常用行为暗示情绪，或让某个情绪悬而未决。
+    阈值：500字内出现3次及以上情绪总结句即触发。
+  applies_to: [description, action]
+  status: experimental
+  effectiveness:
+    times_applied: 0
+    times_caught: 0
+    false_positive_count: 0
+    false_positive_rate: null

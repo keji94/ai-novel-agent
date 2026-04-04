@@ -1,0 +1,26 @@
+# H004: 内感觉比喻
+# 来源: AIGC Harness Rule 6.5 Round 2 (第1章 L3-14)
+# 现象: 用物理痛感比喻心理/认知状态，AI标配手法
+
+- id: H004
+  name: "内感觉比喻"
+  source: human_feedback
+  created_from: "aigc-harness/ch1-l3-14-r2"
+  severity: warning
+  weight: 5
+  pattern_type: semantic
+  check_prompt: |
+    检查段落中是否存在"内感觉比喻"：将心理/认知状态用物理痛感或身体内部感觉来比喻。
+    典型模式：
+    - "脑子里像被塞了块烧红的铁"（热+压）
+    - "脑子里像炸开了一样"（爆炸）
+    - "胸腔里像堵了块石头"（压/堵）
+    AI喜欢用这类比喻来具象化抽象状态，但人类作者更多直接描写行为反应
+    或用更个人化的比喻，不一定是标准化的"内部器官+物理感觉"组合。
+  applies_to: [description]
+  status: experimental
+  effectiveness:
+    times_applied: 0
+    times_caught: 0
+    false_positive_count: 0
+    false_positive_rate: null

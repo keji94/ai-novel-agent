@@ -10,11 +10,38 @@
 #   - AIGC Harness (Rule 6.5): AIGC 诊断后自动沉淀的规则
 #   - Checker 自学习反馈: Checker 检查反馈驱动（待启用）
 
-total_learned_rules: 0
+total_learned_rules: 6
 active_rules: []
-experimental_rules: []
+experimental_rules: [H001, H002, H003, H004, H005, H006]
 review_pending_rules: []
 deprecated_rules: []
+
+# 规则详情
+experimental:
+  H001:
+    name: "对称式设定展示"
+    source: "aigc-harness/ch1-l2-22"
+    severity: warning
+  H002:
+    name: "三段式外貌模板"
+    source: "aigc-harness/ch1-l2-22"
+    severity: warning
+  H003:
+    name: "情绪总结过密"
+    source: "aigc-harness/ch1-l2-22"
+    severity: warning
+  H004:
+    name: "内感觉比喻"
+    source: "aigc-harness/ch1-l3-14-r2"
+    severity: warning
+  H005:
+    name: "工整四步情绪结构"
+    source: "aigc-harness/ch1-l3-14-r2"
+    severity: warning
+  H006:
+    name: "可信细节堆叠"
+    source: "aigc-harness/ch1-l3-14-r2"
+    severity: warning
 
 # 生命周期规则:
 # experimental → (应用≥10次, 有效率≥50%) → review_pending

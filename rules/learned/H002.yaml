@@ -1,0 +1,24 @@
+# H002: 三段式外貌模板
+# 来源: AIGC Harness Rule 6.5 (第1章 L2-22 诊断)
+# 现象: 外貌描写固定用"X的脸+Y的头发+Z的眼睛"三段并列，每段一个形容词
+
+- id: H002
+  name: "三段式外貌模板"
+  source: human_feedback
+  created_from: "aigc-harness/ch1-l2-22"
+  severity: warning
+  weight: 5
+  pattern_type: structural
+  check_prompt: |
+    检查段落中的外貌描写是否使用了"三段式模板"：
+    固定按"脸→发→眼"顺序，每项配一个形容词，节奏完全一致。
+    典型模式：一张满是皱纹的脸，灰白头发乱糟糟，浑浊的眼睛死盯着前方。
+    AI写外貌的标配手法：均匀分配形容词，缺少一个突出的"偏心细节"。
+    人类作者通常只抓1-2个最有辨识度的特征，不会面面俱到。
+  applies_to: [description]
+  status: experimental
+  effectiveness:
+    times_applied: 0
+    times_caught: 0
+    false_positive_count: 0
+    false_positive_rate: null

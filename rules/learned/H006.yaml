@@ -1,0 +1,23 @@
+# H006: 可信细节堆叠
+# 来源: AIGC Harness Rule 6.5 Round 2 (第1章 L3-14)
+# 现象: 用三连并列细节制造"我真的干过/经历过"的可信感
+
+- id: H006
+  name: "可信细节堆叠"
+  source: human_feedback
+  created_from: "aigc-harness/ch1-l3-14-r2"
+  severity: warning
+  weight: 4
+  pattern_type: semantic
+  check_prompt: |
+    检查段落中是否存在"可信细节堆叠"：用三个并列的细节/动作来证明角色的经历真实性。
+    典型模式："报警、做笔录、交班走人"/"翻窗户、撬锁、偷展品"
+    AI喜欢用三连列举来"建立可信度"，人类更多只提一个最具代表性的细节，
+    或者用更模糊的表述（"那套流程"/"那些破事"）。
+  applies_to: [description, action]
+  status: experimental
+  effectiveness:
+    times_applied: 0
+    times_caught: 0
+    false_positive_count: 0
+    false_positive_rate: null

@@ -1,0 +1,24 @@
+# H005: 工整四步情绪结构
+# 来源: AIGC Harness Rule 6.5 Round 2 (第1章 L3-14)
+# 现象: 段落内部按"感觉→闪回→对比→收束"四步推进，逻辑链过于清晰
+
+- id: H005
+  name: "工整四步情绪结构"
+  source: human_feedback
+  created_from: "aigc-harness/ch1-l3-14-r2"
+  severity: warning
+  weight: 6
+  pattern_type: structural
+  check_prompt: |
+    检查段落内部是否存在过于工整的情绪推进结构。
+    典型模式：感觉描写 → 回忆/闪回 → 现实对比 → 情绪收束
+    例："手心湿了（感觉）→他在博物馆见过…（闪回）→但那些经验在这儿没用（对比）→他慢慢把翻涌的东西咽回去，喉咙发紧（收束）"
+    人类写作中情绪推进通常更混乱：可能跳过闪回直接行动，可能对比和行动混在一起，
+    可能让某个情绪悬而未决。AI倾向让每个情绪段落都走完完整的逻辑闭环。
+  applies_to: [description, action]
+  status: experimental
+  effectiveness:
+    times_applied: 0
+    times_caught: 0
+    false_positive_count: 0
+    false_positive_rate: null

@@ -1,0 +1,26 @@
+# H001: 对称式设定展示
+# 来源: AIGC Harness Rule 6.5 (第1章 L2-22 诊断)
+# 现象: 两个身份/概念用完全对称的句式并列交代，像念简历
+
+- id: H001
+  name: "对称式设定展示"
+  source: human_feedback
+  created_from: "aigc-harness/ch1-l2-22"
+  severity: warning
+  weight: 6
+  pattern_type: structural
+  check_prompt: |
+    检查段落中是否存在"对称式设定展示"：两个身份、概念或信息用完全对称的句式并列交代。
+    典型模式：A的X年...记得清清楚楚。B的只有碎片，大部分是空白。
+    AI倾向将信息均匀铺开，人类作者会让某个信息突出、某个模糊、某个靠后文补。
+    重点关注：
+    - 两个并列主语用相同句式介绍
+    - "A的...清楚。B的...空白"式对比
+    - 信息展示力度均匀，没有主次之分
+  applies_to: [description]
+  status: experimental
+  effectiveness:
+    times_applied: 0
+    times_caught: 0
+    false_positive_count: 0
+    false_positive_rate: null
