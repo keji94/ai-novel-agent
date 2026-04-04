@@ -8,7 +8,8 @@ const CONFIG = {
   width: 1080,
   padding: 40,
   fontSize: 24,
-  lineHeight: 1.6
+  lineHeight: 1.6,
+  deviceScaleFactor: 2  // 2x 高清输出，1080px 视口实际输出 2160px（2K）
 };
 
 // HTML 模板 - 紧凑风格
@@ -323,8 +324,8 @@ async function renderPage(browser, html, outputDir, fileName) {
     // 获取内容实际高度
     const height = await page.evaluate(() => document.body.scrollHeight);
     
-    // 设置视口为内容实际大小
-    await page.setViewportSize({ width: CONFIG.width, height: height + 100 });
+    // 设置视口为内容实际大小（高清缩放）
+    await page.setViewportSize({ width: CONFIG.width, height: height + 100, deviceScaleFactor: CONFIG.deviceScaleFactor });
 
     const outputPath = path.join(outputDir, `${fileName}.png`);
     

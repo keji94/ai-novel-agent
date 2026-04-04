@@ -17,3 +17,5 @@ images/
 
 # Skill 运行时缓存
 cache/
+md2wechat.yaml
+__pycache__/

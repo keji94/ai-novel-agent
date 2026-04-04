@@ -1,0 +1,15 @@
+{
+  "id": "lp_1775260326",
+  "source": "https://v.douyin.com/5acSLDWJksI/",
+  "platform": "douyin",
+  "title": "故事到最后，都有自己的生命",
+  "status": "extracting",
+  "created_at": "2026-04-04T07:14:00+08:00",
+  "steps": {
+    "extract": { "status": "done", "result_file": "temp/douyin_7616691225504025896_tips.json" },
+    "review":  { "status": "done", "result_file": "temp/douyin_7616691225504025896_review.json" },
+    "store":   { "status": "done", "stored_count": 6 },
+    "verify":  { "status": "done" },
+  "status": "done"
+  }
+}
