@@ -1,37 +1,39 @@
 {
-  "last_updated": "第3章-共鸣",
+  "last_updated": "第1章-醒来",
   "characters": [
     {
       "name": "苏辰",
       "identity": "主角，穿越者",
       "original_identity": "陈安，博物馆保安，32岁退伍军人",
       "current_body": "16岁独臂少年",
-      "location": "三环外废墟B-7区附近窝棚",
+      "location": "三环外废墟区某半塌巷子，准备返回",
       "status": {
-        "physical": "瘦弱，独臂（左臂断于童年虫将袭击），右手虎口擦伤",
-        "mental": "冷静务实，已完成记忆融合，心态稳定",
+        "physical": "极度虚弱，独臂（左臂断于童年虫将袭击），虎口擦伤，精神消耗大",
+        "mental": "两套记忆整合中，32岁冷静+16岁本能并存，意识到自己暴露了",
         "abilities": {
           "star_river": {
             "activated": true,
             "stars_lit": 1,
-            "stars_detail": ["汉代星云纹铜镜（凡星·白）"]
+            "stars_detail": ["汉代星云纹铜镜（凡星·白）"],
+            "understanding": "主动抓住星辰后产生了冲击波击退工虫，但不知道原理",
+            "side_effect": "激活时产生了可被他人感知的波动，已暴露位置"
           },
           "creation_furnace": {
-            "activated": true,
-            "level": "初始激活",
-            "limitation": "增幅消耗精神力，无法突破精神容量上限"
+            "activated": false,
+            "appearance": "识海中出现炉鼎形虚影，名字'造化炉'自然浮现",
+            "status": "未发光，无反应，只是悬浮"
           },
           "appraisal_eye": {
-            "acquired": true,
-            "precision": "低——仅能分辨微弱灵识光晕"
+            "acquired": false
           },
-          "resonance_type": "心眼型（精神/信息方向），本人已判断但尚未向外人透露",
-          "resonance_level": "觉醒初期（尚未正式定阶）"
+          "resonance_type": "未知（尚未觉醒或判断）",
+          "resonance_level": "未定阶"
         },
-        "inventory": ["汉代星云纹铜镜（贴身）", "陶印（低级古物，窝棚内）"],
+        "combat_achievements": ["主动抓住星辰，冲击波将工虫弹飞击退"],
+        "inventory": ["汉代星云纹铜镜（揣在怀里）"],
+        "motivation": "给老孙头换药钱（药三天前断了）",
         "relationships": {
-          "老孙头": "养父，感情深厚，依赖与被依赖",
-          "马三": "敌对——遭遇抢夺，结下梁子"
+          "老孙头": "养父，重病在家，药已断三天"
         }
       }
     },
@@ -39,23 +41,26 @@
       "name": "老孙头（孙德福）",
       "identity": "苏辰养父，三环外拾荒者",
       "age": "60多岁",
-      "location": "三环外废墟B-7区窝棚",
+      "location": "家中（窝棚），重病卧床",
       "status": {
-        "physical": "年老体衰，但废墟生存经验丰富",
-        "abilities": "一阶触物者（隐藏），共鸣物：破旧洛阳铲",
-        "hidden_past": "曾是长安城共鸣者公会成员，苏辰母亲的外勤队友。因违抗放弃搜救命令被除名，自我放逐三环外",
-        "inventory": ["铁棍", "破旧帆布包", "洛阳铲（未暴露）"]
+        "physical": "重病，药已断三天，卧床不起",
+        "abilities": "隐藏（本章未展示）",
+        "hidden_past": "曾是长安城共鸣者公会成员，苏辰母亲的外勤队友（本章未揭示）"
       },
-      "personality_notes": "嘴硬心软，唠叨但可靠，对苏辰视如己出"
+      "personality_notes": "嘴硬心软，把苏辰从废墟捡回来养大",
+      "first_appearance": "第1章中被苏辰在绝境时闪念提及，未实际出场"
     },
     {
-      "name": "马三",
-      "identity": "三环外拾荒者团伙头目",
+      "name": "两名巡逻者（未命名）",
+      "identity": "在废墟中巡逻的人，能感知古物激活波动",
+      "location": "向废墟东面搜索",
       "status": {
-        "hostility": "与苏辰/老孙头结仇——抢夺事件中被碎石砸伤",
-        "threat_level": "中等——三人团伙，但未必会深入追击"
+        "abilities": "能感知古物共鸣波动，判断波动等级",
+        "affiliation": "未知",
+        "threat_level": "高——正在搜索波动源头"
       },
-      "first_appearance": "第2章-拾荒"
+      "first_appearance": "第1章末尾，被对话间接描写",
+      "note": "判断巷子堵死未进入，搜索方向偏移至东面，暂未发现苏辰"
     }
   ]
 }

@@ -16,8 +16,12 @@
   3.5 关键章节 AI 痕迹检测（首章/高潮章/转折章）
      → sessions_spawn("detector", 快速检测)
      → IF AI 痕迹分数 < 70 → 进入 Fix Loop anti-detect 模式
-  4. 草稿存档: copy chapter → chapters/drafts/第X章-标题_draft.md
-     (仅当 drafts/ 下尚无此章草稿时保存)
+  4. 草稿存档 (Supervisor 执行):
+     IF novels/{项目}/chapters/drafts/第X章-{标题}.draft.md 不存在:
+       a. 创建 drafts/ 目录
+       b. read(chapters/第X章-{标题}.md) → 获取 AI 初稿
+       c. write(chapters/drafts/第X章-{标题}.draft.md, 内容)
+     目的: 保存 AI 初稿，用于定稿差异对比和训练数据生成
   5. 返回 Writer 结果 + Editor 审核报告
 ```
 

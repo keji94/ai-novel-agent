@@ -167,3 +167,97 @@
   "summary": "定稿分析：共25处变更，生成3条候选规则（1条replacement + 2条learned）"
 }
 ```
+
+---
+
+## 训练数据生成（Phase E）
+
+### 过滤规则
+
+从 Phase B 差异分析结果中提取训练数据时，严格遵循以下过滤：
+
+| 条件 | 动作 | 原因 |
+|------|------|------|
+| 段落状态 ≠ MODIFIED | 排除 | 只取变更段落 |
+| change_type = plot | 排除 | 内容决策，非写作质量 |
+| change_type = setting | 排除 | 设定调整，非写作质量 |
+| change_type = other | 排除 | 不明确变更 |
+| change_type ∈ {ai_trace, style, grammar} | 保留 | 写作质量改进 |
+| 修改字符数 ≤ 3 | 排除 | 微小修改信噪比低 |
+
+### Instruction 模板
+
+按 change_type 选择 instruction:
+
+| change_type | instruction |
+|-------------|------------|
+| ai_trace | "请将以下AI生成的段落改写为更自然、更像人类写作的风格，消除AI痕迹" |
+| style | "请将以下段落改写为更好的文学风格，改善句式和节奏" |
+| grammar | "请修正以下段落中的语法和表达问题，使其更简洁自然" |
+
+### JSONL 记录格式
+
+每条记录为一个 JSON 对象，一行一条:
+
+```json
+{
+  "instruction": "请将以下AI生成的段落改写为更自然、更像人类写作的风格，消除AI痕迹",
+  "input": "他不禁感到一阵心悸，那股力量竟然如此强大，让他不由自主地后退了一步。",
+  "output": "他心里一紧，往后退了半步。那股力量太强了。",
+  "metadata": {
+    "change_type": "ai_trace",
+    "chapter": "第1章-醒来",
+    "project": "末世古物共鸣",
+    "paragraph_index": 5,
+    "source": "finalize_diff",
+    "char_diff": 28
+  }
+}
+```
+
+### metadata 字段说明
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| change_type | string | 变更分类: ai_trace / style / grammar |
+| chapter | string | 章节标识，如"第1章-醒来" |
+| project | string | 项目名称 |
+| paragraph_index | int | 段落在章节中的位置（从1开始） |
+| source | string | 固定为"finalize_diff" |
+| char_diff | int | 修改的字符数差异 |
+
+### 输出 JSON Schema 扩展
+
+在 Mode 7 的输出 JSON 中追加 training_data 字段:
+
+```json
+{
+  "mode": 7,
+  "chapter": "第X章-标题",
+  "review": { ... },
+  "diff_analysis": { ... },
+  "candidate_rules": [ ... ],
+  "training_data": [
+    {
+      "instruction": "...",
+      "input": "...",
+      "output": "...",
+      "metadata": { ... }
+    }
+  ],
+  "training_data_summary": {
+    "total_records": 15,
+    "by_type": {
+      "ai_trace": 8,
+      "style": 5,
+      "grammar": 2
+    },
+    "skipped_reasons": {
+      "unchanged": 20,
+      "content_change": 3,
+      "minor_edit": 2
+    }
+  },
+  "summary": "定稿分析：共25处变更，生成3条候选规则（1条replacement + 2条learned），提取15条训练数据"
+}
+```

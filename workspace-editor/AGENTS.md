@@ -131,8 +131,8 @@ Learner 入库后执行全系统一致性检查（互重/分类/质量/引用完
 
 ```
 适用: 用户人工修改章节后的定稿（规则16触发）
-输入: chapter_path + draft_path (可选) + project
-输出: 审核报告 + 差异分析 + 候选规则
+输入: chapter_path + draft_path (可选) + project + generate_training_data (可选, 默认false)
+输出: 审核报告 + 差异分析 + 候选规则 + 训练数据 (可选)
 
 流程:
   Phase A: 内容审核
@@ -164,6 +164,21 @@ Learner 入库后执行全系统一致性检查（互重/分类/质量/引用完
     - 定稿审核结果 (grade + issues)
     - 差异分析报告 (每类变更数量 + 典型示例)
     - 候选规则列表 (直接写入 rules/)
+
+  Phase E: 训练数据提取 (仅当 generate_training_data=true 且有草稿时)
+    1. 从 Phase B 差异分析中筛选:
+       - 仅取 MODIFIED 段落
+       - 仅取 change_type ∈ {ai_trace, style, grammar}
+       - 排除 plot/setting/other 类变更（内容决策，非写作质量）
+       - 排除微小修改（修改字符数 ≤ 3）
+    2. 每条变更生成一条 JSONL 记录:
+       - instruction: 根据 change_type 选择对应指令模板
+       - input: AI 草稿中的原始段落
+       - output: 人工修改后的段落
+       - metadata: {change_type, chapter, project, paragraph_index, source, char_diff}
+    3. 输出 training_data 字段 (JSON 数组) + training_data_summary
+
+> 训练数据 JSONL 记录格式和 instruction 模板见 `reference/finalize-review.md`
 ```
 
 > 详细差异分析方法论和规则生成模板见 `reference/finalize-review.md`

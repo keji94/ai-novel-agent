@@ -1,5 +1,5 @@
 {
-  "last_updated": "第3章-共鸣",
+  "last_updated": "第1章-醒来",
   "world": {
     "era": "异变纪元120年",
     "global_population": "不足5亿",
@@ -8,19 +8,14 @@
   "settings_ref": "context/state/settings_release.json",
   "locations_revealed": [
     {
-      "name": "三环外废墟B-7区",
-      "description": "苏辰和老孙头的活动区域，无人管辖的废墟",
-      "features": ["老城区建筑垃圾堆", "地下管道系统", "变异犬群领地（东区）"],
-      "dangers": ["铁甲工虫", "马三团伙", "虫巢分泌物"]
-    },
-    {
-      "name": "老孙头的窝棚",
-      "description": "集装箱+碎砖搭建，B-7区附近",
-      "features": ["铁皮顶", "基本物资储备极少"]
+      "name": "三环外废墟区",
+      "description": "苏辰醒来的区域，无人管辖的废墟",
+      "features": ["倒塌的楼房", "碎石和扭曲钢筋", "半塌巷子"],
+      "dangers": ["铁甲工虫（巡逻搜索）"]
     },
     {
       "name": "长安城（远景）",
-      "description": "三环外可见的防护罩光墙，蓝白色光芒",
+      "description": "远处可见蓝白色防护罩光带横贯天际",
       "status": "未进入，仅远观"
     }
   ]

@@ -64,7 +64,11 @@
   4. 不通过 → 自动调 Reviser 修订 → 重复审核（最多3轮，超过后报告用户决策）
   5. 真相文件重算: sessions_spawn("writer", Phase 2 状态重算)
      IF Phase 2 返回失败: 记录警告，下次 Writer 写作时自动触发完整重算
-  6. 草稿存档: copy chapter → chapters/drafts/第X章-标题_draft.md
-     (仅当 drafts/ 下尚无此章草稿时保存)
+  6. 草稿存档 (Supervisor 执行):
+     IF novels/{项目}/chapters/drafts/第X章-{标题}.draft.md 不存在:
+       a. 创建 drafts/ 目录
+       b. read(chapters/第X章-{标题}.md) → 获取 AI 初稿
+       c. write(chapters/drafts/第X章-{标题}.draft.md, 内容)
+     目的: 保存 AI 初稿，用于定稿差异对比和训练数据生成
   7. 返回修改结果
 ```

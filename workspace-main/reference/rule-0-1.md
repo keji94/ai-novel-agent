@@ -102,6 +102,29 @@ all_specialized_issues = merge_all(specialized_results.*.issues)
 not_converged_skills = [name FOR name, result IN specialized_results IF NOT result.converged]
 ```
 
+### Phase 3.7: 大纲结构检查
+
+世界观审计收敛后，自动运行大纲结构诊断。与世界观审计互补——Critic 查"设定一致性"，OutlineChecker 查"叙事结构节奏"。
+
+```
+// 自动触发条件：大纲文件存在（总大纲.md + 至少一个 volumes/*.md）
+outline_files = glob(project_path + "/outline/总大纲.md") + glob(project_path + "/outline/volumes/*.md")
+IF outline_files.length >= 2:
+
+  sessions_spawn("outline-checker", {
+    novel_path: project_path,
+    mode: "full_diagnostic",
+    scope: "full",
+    frameworks: ["snyder_beat", "harmon_circle", "kishotenketsu", "pacing", "setup_payoff", "character_arc", "theme"]
+  }) → outline_report
+
+  // 汇总到 Phase 5 展示给用户
+  // P0/P1 问题 → 需要修复后重新检查
+  // P2/P3 问题 → 列入建议，由用户决定是否修复
+```
+
+> 大纲结构检查也可由用户主动触发（规则 1.5），或在大纲修改后手动调用。
+
 ### Phase 5-7: 用户决策 + 修复 + 衔接
 
 ```

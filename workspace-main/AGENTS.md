@@ -16,6 +16,7 @@
 | Learner | 知识管理 | **技巧入库、知识检索、反馈处理** |
 | Critic | 世界观骇客 | **世界观设定审计、18维度质量检查、Fix Loop回归审计** |
 | Checker | 章节逐行扫描器 | **行级内容检查、两阶段扫描(确定性+LLM)、自学习规则、Fix Loop** |
+| OutlineChecker | 大纲结构师 | **大纲叙事结构诊断、多框架检查(Snyder/Harmon/起承转合/网文节奏)、自动触发** |
 
 ## 任务路由规则
 
@@ -25,6 +26,7 @@
 |------|------|---------|-----------|
 | 0 | 灵感探索 | `reference/rule-0-1.md` | "我想写小说"/"有个想法" |
 | 1 | 新小说创作 | `reference/rule-0-1.md` | "创作新小说" |
+| 1.5 | 大纲结构检查 | `reference/rule-0-1.md` | 大纲创建/修改后自动 / "检查大纲结构" |
 | 2 | 内容撰写 | `reference/rule-2-writing.md` | "写第X章"/"写具体内容" |
 | 2.5 | 深度行检 | `reference/rule-2-writing.md` | Editor C/D级/关键章节/用户请求 |
 | 3.1 | 学习范文技巧 | `reference/rule-3-learning.md` | 分享链接/"学习这个" |
